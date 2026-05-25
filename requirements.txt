@@ -1,0 +1,7 @@
+# Core agent runs with the standard library only.
+# The LLM reasoning layer is optional — install this to enable it,
+# then set ANTHROPIC_API_KEY (and optionally LLM_MODEL).
+anthropic>=0.39.0
+
+# Dev / testing
+pytest>=8.0.0
