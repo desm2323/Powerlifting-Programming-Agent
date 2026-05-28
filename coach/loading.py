@@ -40,8 +40,10 @@ def est_1rm_from_rpe(weight: float, reps: int, rpe: float) -> float:
     return epley_1rm(weight, reps_to_failure)
 
 
-def training_max(one_rm: float, fraction: float = 0.9) -> float:
-    """Working training max — a sustainable % of true 1RM (5/3/1 uses ~90%)."""
+def training_max(one_rm: float, fraction: float = 1.0) -> float:
+    """Training max from a 1RM. Defaults to identity (TM = 1RM); pass a lower
+    `fraction` to apply a 5/3/1-style safety buffer. The auto-regulation
+    layer (RPE caps + readiness) makes the buffer optional in this agent."""
     return round_to_increment(one_rm * fraction)
 
 
