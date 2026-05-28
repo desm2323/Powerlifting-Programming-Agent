@@ -1,0 +1,19 @@
+# Ben L. Johnson (@BenLJohnson1996) — videos used to ground the
+# expert_knowledge.py KB. Topics: top set + backoff programming, RPE
+# usage, accessory selection, volume management on the 3 main lifts.
+#
+# Edit this list and re-run `python scripts/ingest_ben_videos.py
+# docs/ben_videos.txt` to refresh the transcripts in docs/ben_transcripts/.
+
+https://www.youtube.com/watch?v=n9Wyxr4Yks0
+https://www.youtube.com/watch?v=a5xE7WbtxRs
+https://www.youtube.com/watch?v=6UPsJiD7QcE
+https://www.youtube.com/watch?v=BthPTR4fBQk
+https://www.youtube.com/watch?v=QKFM64LGXjA
+https://www.youtube.com/watch?v=Klt4SLA64iE
+https://www.youtube.com/watch?v=406rClFwNxY
+https://www.youtube.com/watch?v=1OXhV1uxPpw
+https://www.youtube.com/watch?v=QHGcZaDuwpQ
+https://www.youtube.com/watch?v=zrOWMftnvQw
+https://www.youtube.com/watch?v=21_YfhLwL6E
+https://www.youtube.com/watch?v=g7NdVO9U9gQ

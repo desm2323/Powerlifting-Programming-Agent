@@ -1,0 +1,416 @@
+# How to stack training blocks (peaking done right)
+# Author: Ben Johnson
+# URL: https://www.youtube.com/watch?v=406rClFwNxY
+# Video ID: 406rClFwNxY
+# Snippets: 410
+
+[0:00] A lot of guys get peaking completely
+[0:02] wrong, and because of that, they don't
+[0:03] often PR. Maybe you run a full 12-week
+[0:07] training program, you get all the way to
+[0:09] the end, then things feel heavy, fizzle
+[0:11] out, and you don't make any progress.
+[0:13] And it's extremely frustrating to have
+[0:14] wasted that entire 12 weeks just to
+[0:17] realize that you haven't made any
+[0:18] progress again. In this video, I'm going
+[0:20] to give you a much better way to peak so
+[0:23] that you can reliably hit PRs at the end
+[0:25] of each training block. And then at the
+[0:27] end of this video, I'm going to show you
+[0:29] exactly how I do that in my own training
+[0:31] that has allowed me to squat 545 lb,
+[0:34] bench press 352, and deadlift 661 lb.
+[0:38] And if you want me to personally write
+[0:40] your training blocks and help you to PR,
+[0:42] I've done it for hundreds of
+[0:43] intermediate guys, top link in the
+[0:44] description, you can hire me as your
+[0:46] personal strength coach. Or second link,
+[0:48] you can just go and run my strength
+[0:49] training programs that have built-in
+[0:51] peaking on them. So, let me get straight
+[0:54] into it.
+[0:55] Traditional peaking sucks, basically, is
+[0:57] what I'm trying to say in this video.
+[0:59] The common programs that you will run
+[1:01] that use what I would call traditional
+[1:03] peaking, where basically you'll do like
+[1:06] a 12-week program, or maybe you do like
+[1:08] a 6-week program, and the way the
+[1:10] peaking is usually done is like the
+[1:13] intensity of the program will slowly go
+[1:15] up, so you might go from like 70%, 75,
+[1:18] 80%, and the volume will follow the
+[1:21] opposite pattern where it might be like
+[1:22] a 5 by 5, 4 by 5, 3 by 5, 3 by 3, and
+[1:26] then by the end of the program it's like
+[1:28] really heavy and grindy.
+[1:30] And the problem is, there are many
+[1:32] problems with this approach, and you
+[1:33] will have seen them yourself, that's why
+[1:35] you're watching this video.
+[1:36] But you often will feel that at the
+[1:38] start of that training program, you feel
+[1:40] pretty good, like you're thriving on the
+[1:42] volume, things feel pretty sharp, you
+[1:44] feel quite strong. Then you get to the
+[1:46] end of the program, and things just
+[1:48] start feeling really heavy, really slow,
+[1:50] and you just fizzle out. There are a few
+[1:52] reasons for that. The first one is
+[1:53] because you are not doing enough
+[1:55] practice with those heavy top sets.
+[1:57] These programs are only bringing those
+[1:59] top sets in towards the end of the
+[2:00] program, so you haven't really practiced
+[2:02] them. It would be like a sprinter doing
+[2:04] like 6 weeks of like long distance runs
+[2:07] and then in the last three or four weeks
+[2:09] he does sprints only. He'd feel really
+[2:11] detrained and weird. The other reason
+[2:14] is because the volume is higher at the
+[2:16] start of the program and maybe you do
+[2:18] well with higher volumes. I know that I
+[2:19] do personally. And that stimulus is
+[2:22] really helping you to adapt. It's an
+[2:23] appropriate dose of stress and then you
+[2:26] pull all of that volume out. So, you go
+[2:27] from like a 5 by 5 down to a 3 by 3,
+[2:31] which is like less than half of the
+[2:33] volume and you've pulled out all that
+[2:35] stimulus that was making you strong. And
+[2:37] now because of that the stimulus is
+[2:38] gone, the adaptations stop and things
+[2:41] start to feel really heavy and really
+[2:42] slow and that's why at the end of the
+[2:44] program you feel terrible. Because I
+[2:46] remember when I ran intermediate
+[2:48] programs, I might do like 90 kilos for
+[2:50] my 5 by 5. Then I get to the end of the
+[2:53] program and I'm really struggling with
+[2:54] like 100 kilos or 105 for a single and
+[2:57] it didn't make any sense. And this is
+[2:59] kind of the reasons why that is
+[3:00] happening. Now, another big problem with
+[3:02] this method of peaking is you are forced
+[3:05] to just peak or to test your one rep max
+[3:07] based on the the arbitrary length of the
+[3:09] program. So, it might be 6 weeks, it
+[3:11] might be 8, it might be 12 weeks. It's
+[3:13] completely random. It's not designed
+[3:15] based on you as an individual. You're
+[3:16] just maxing out when the program says.
+[3:19] The problem with that is
+[3:21] is that individuals are going to vary
+[3:23] massively at when they peak in a given
+[3:25] program. So, the way that I determine
+[3:27] when my lifters or myself will hit PRs
+[3:30] or when we will test one rep maxes is
+[3:32] using a concept called time to peak.
+[3:35] Now, this was popularized by Mike
+[3:36] Tuchscherer and Reactive Training
+[3:37] Systems. And basically the approach here
+[3:40] is we do the opposite of these generic
+[3:43] programs. So, this generic program would
+[3:44] be called a top-down
+[3:47] programming model. So, you do 12 weeks,
+[3:48] it's already written and you just force
+[3:51] yourself into the program. With this
+[3:53] approach, it's called bottom-up
+[3:54] programming. So, I basically write 1
+[3:56] week of training at a time, and this is
+[3:58] what I do for my clients. So, I write
+[4:00] week 1, you run that week of training
+[4:02] with very minimal changes until you hit
+[4:04] a peak in performance. So, for myself,
+[4:06] my training blocks are 5 weeks because
+[4:08] basically I I do week 1, I keep going
+[4:11] until week 5, week 5 I always feel my
+[4:14] strongest. Then week 6, fatigue goes up
+[4:16] quite a lot and things start to feel
+[4:18] heavy. Week 7, things feel even worse.
+[4:20] So, I run 5-week training blocks. Then
+[4:23] when I come to peak, it's so easy. I
+[4:25] just peak on week 5 because I know
+[4:27] reliably that I'm always strong on week
+[4:30] 5 of the training block, and I'll
+[4:31] explain that later on in this video.
+[4:34] But, I would do it that way instead
+[4:35] because otherwise, you are literally
+[4:37] just doing it randomly. Like, you don't
+[4:39] know if 12 weeks is appropriate for you.
+[4:41] It wasn't for me. I always felt terrible
+[4:43] and never hit PRs. And all of this with
+[4:45] traditional peaking results in a very
+[4:47] unpredictable, disappointing experience
+[4:50] because there's nothing worse than you
+[4:51] jump on a training program and you're
+[4:53] like, "Okay, I'm excited. This is the
+[4:55] one. I'm going to put in 12 weeks of
+[4:57] really hard work." You do all of this
+[4:59] work, you get to the end, and then you
+[5:01] have no PRs at the end to to show for
+[5:03] your work. It's a complete waste of your
+[5:04] time. Then you jump to another new
+[5:06] program, and you repeat this cycle all
+[5:08] over again. And it takes like 6 months
+[5:10] to a year before you can even figure out
+[5:12] like how you peak, when to peak, and you
+[5:15] just waste a bunch of time. So, let me
+[5:16] show you a better way to set up your
+[5:19] peaking then. So, the first thing that I
+[5:20] would do
+[5:21] is I would set up this time to peak
+[5:24] concept. Now, it doesn't need to be
+[5:25] really complicated. The concept
+[5:27] basically means how many exposures to a
+[5:30] given lift can you sustain without
+[5:33] fatigue basically skyrocketing. So, that
+[5:35] basically just means how many weeks of
+[5:37] training can you run until you fizzle
+[5:39] out. So, for me personally, 5 weeks is
+[5:42] the sweet spot, okay?
+[5:44] Really simple to figure out. Write
+[5:46] yourself 1 week of training and just run
+[5:48] that week with basically no changes
+[5:51] until you hit a peak in performance and
+[5:54] then you have two down weeks. So, what I
+[5:56] mean by that is you need to keep going
+[5:58] until you see two down weeks in a row.
+[6:00] So, maybe you do 4 weeks where you feel
+[6:03] really strong, you add weight to the bar
+[6:04] every single week, then on week five
+[6:07] things start to feel a bit heavy, you
+[6:08] feel fatigued and then week six again it
+[6:10] feels even worse. Your time to peak
+[6:13] would be 4 weeks, okay? And it doesn't
+[6:15] need to be exact, it doesn't need to be
+[6:16] like 100% every time on week four I feel
+[6:19] amazing, but it's reliable enough that
+[6:22] it gives us a better method of peaking
+[6:24] because
+[6:24] even if you don't have a great week
+[6:26] four, you still know that every week
+[6:28] four you're going to feel decent rather
+[6:30] than to just push to an arbitrary week
+[6:32] 12 or however these generic programs are
+[6:35] doing it. So, once you've got a rough
+[6:36] idea of time to peak, for me it's 5
+[6:38] weeks, you then need to identify
+[6:41] how long it takes you to hit a PR or how
+[6:45] many blocks you can push for basically.
+[6:47] And what I mean by that is if you're a
+[6:49] beginner, you can probably PR every
+[6:52] single training block. So, every like 4
+[6:54] weeks, every 4 week block you can
+[6:56] probably hit a PR. If you're an
+[6:58] intermediate guy, it's probably going to
+[7:00] take two to three blocks. Let's assume
+[7:02] it's three just for the purpose of this
+[7:03] video. For myself, it usually takes
+[7:05] about three or four blocks before I can
+[7:07] demonstrate a PR if I'm in a good place.
+[7:10] It depends what period of training, but
+[7:11] minimum it's going to be three blocks.
+[7:13] So, for me personally 15 weeks of
+[7:15] training before I can hit a PR. So, for
+[7:18] you, if you're an intermediate, let's
+[7:19] just assume that it takes you three
+[7:21] blocks to hit a PR. So, first we figure
+[7:23] out how long those blocks are or time to
+[7:25] peak, let's say 4 weeks for this
+[7:27] example, and let's say it takes you
+[7:29] three weeks to three blocks to PR. So,
+[7:31] that's 12 weeks of total training. Now,
+[7:35] the essential thing here and the one
+[7:37] thing I want you to take from this video
+[7:38] and it's why I've titled this video the
+[7:40] way it is
+[7:41] is that if you want to PR on a
+[7:43] consistent basis, you need to stack
+[7:45] training blocks. Now, what I mean by
+[7:47] this is too many guys make the huge
+[7:50] mistake of trying to PR at the end of
+[7:52] every single training block. That's
+[7:54] probably what you do right now. So, you
+[7:55] do block one and you think I need to end
+[7:57] block one with a really heavy single. I
+[7:59] need to go RP 9, RP 10, like 90, 95% and
+[8:03] above. And they try to do it and because
+[8:05] 4 weeks isn't enough time for you to
+[8:08] accrue enough stress, you don't PR. Then
+[8:11] [snorts] you go into block two fatigue.
+[8:12] Do you have to strip some weight back?
+[8:14] You disrupt your momentum. Block two
+[8:16] ends up being a waste of a training
+[8:17] block. And then block three, you're
+[8:19] basically spending the time to get back
+[8:21] to where you were in block one. It's a
+[8:23] terrible 12 weeks and you don't make any
+[8:25] progress. What I want you to do instead
+[8:28] is to leave some in the tank at the end
+[8:30] of each block. Just look at block three.
+[8:32] Block three is where we're trying to PR.
+[8:35] Block two are just deposits. Consider
+[8:37] them deposits, okay? So, you are
+[8:38] depositing training stress to get to the
+[8:41] end of block three and block three is
+[8:43] where we're going to aim for the PRs.
+[8:44] The way you would set this up, so let's
+[8:46] say we're doing three blocks of 4 weeks.
+[8:49] Block one, we might end that training
+[8:51] block. So, on week four, we might work
+[8:53] up to an RP 7.5 to 8, right? That might
+[8:57] be a single, it might be a double, but
+[8:58] let's just say at the end of that block,
+[9:00] you're going to do a single at RP 7.5 to
+[9:03] 8. It's not maximal, but it's heavy
+[9:05] enough that you can get in some exposure
+[9:07] to high intensities, okay? So, let's
+[9:09] just say on the squat for example, you
+[9:10] do a single RP 7.5 to 8. Now, you move
+[9:13] into the next block. You reset, you
+[9:15] start a little bit lighter, maybe you
+[9:16] start like RP 5, 6. Then you go RP 6, 7,
+[9:19] you ramp up. And this block two, maybe
+[9:22] you end this one around RP 8 to 8.5, so
+[9:25] slightly heavier than the first block.
+[9:27] So, maybe you ended block one with a
+[9:29] single at like 365 lb, maybe you end
+[9:32] block two with a single around 385 or
+[9:34] 405. It's still submaximal, you still
+[9:37] left a little bit in the tank because
+[9:38] we're building to block three. Then we
+[9:40] move into block three, again we reset,
+[9:42] maybe we start with a single RP five to
+[9:44] six, and again we end that block a
+[9:46] little bit heavier. This is the one
+[9:47] where we're getting going to end around
+[9:49] RP nine to 10. So, block one is ending
+[9:52] RP 7.5 to eight, block two eight to 8.5,
+[9:55] maybe even a nine, and then block three
+[9:58] we're going RP nine to 10 all out.
+[10:00] So, these first two blocks are kind of
+[10:03] the building blocks to block three, so
+[10:04] you can view it like the blocks are
+[10:06] stacking on top of each other and block
+[10:08] three is the one where we want to
+[10:10] demonstrate the progress. Rather than
+[10:12] try to max out in all three blocks, you
+[10:14] won't PR because there's not enough time
+[10:16] to to accumulate training stress, and
+[10:18] I've used the
+[10:20] saving money analogy before
+[10:22] of like if you wanted to buy a house or
+[10:24] a car, you would need to save, save,
+[10:26] save, keep depositing into your bank
+[10:27] account over months and months and
+[10:29] months, and then you buy the house or
+[10:30] the car at the end of like a six-month
+[10:32] or a one-year period, but imagine if
+[10:35] when you were saving for that house or
+[10:36] car,
+[10:37] month one you go and I don't know, you
+[10:39] buy a designer bag and you rinse your
+[10:41] account to zero and you have to reset.
+[10:43] Then a couple months later you go and
+[10:45] buy some shoes and you reset your
+[10:46] account back to zero. You'd never get
+[10:48] the house or the car. That's the
+[10:50] equivalent to what you're doing in your
+[10:51] training. Block one, you feel pretty
+[10:53] good at the end, so you're like, "Fuck
+[10:54] it, I'm going to max out." and you reset
+[10:56] yourself to zero because maxing out
+[10:58] comes with fatigue, it comes with some
+[11:00] aches and pains. You can't just max out
+[11:02] and then jump straight back into
+[11:03] training and PR again. So, you keep
+[11:05] resetting your account to zero. So,
+[11:07] instead deposit block one, deposit block
+[11:09] two, then hit a PR in block three. And
+[11:12] you don't always even need to send the
+[11:13] PR in block three, sometimes it might be
+[11:15] beneficial to stack up like five or six
+[11:17] training blocks and then go hit a huge
+[11:19] PR in block five, block six or something
+[11:21] like that. But the point is if you take
+[11:23] anything from this video,
+[11:25] stop acting like a excited little kid
+[11:27] chasing dopamine in your training. I
+[11:29] have to PR this block, this block, this
+[11:31] block, and that's why you never PR.
+[11:33] Stack the blocks up and then go hit the
+[11:35] PR in block three. That's how you peak
+[11:37] properly. Now, when this comes to like a
+[11:39] competition or something like that, I
+[11:41] will work backwards. So, if I know I've
+[11:43] got a competition in 3 months, I want
+[11:45] competition to fall on week five of
+[11:47] block three. And then I just work
+[11:49] backwards and I'm going to intentionally
+[11:51] leave weight in the tank on the the
+[11:54] blocks leading up. So, prior to my last
+[11:56] competition, I intentionally took block
+[11:58] two fairly easy. I think I only did a
+[12:00] single RPE eight. My coach really held
+[12:03] me back because block two at the block
+[12:05] two, I felt amazing. I probably could
+[12:06] have hit some PRs. But I know if I did,
+[12:09] I'm then compromising block three and
+[12:10] block three is the one where I can hit
+[12:12] the PRs properly, like big PRs and
+[12:14] demonstrate my strength. So, you have to
+[12:16] keep the long-term picture in mind,
+[12:17] okay? So,
+[12:19] let me give you some practical
+[12:21] applications from this video then,
+[12:22] things you can directly do right now to
+[12:24] go improve your strength training. So,
+[12:26] if you're an intermediate guy, let's
+[12:28] just say that it takes you three
+[12:29] training blocks to demonstrate a PR,
+[12:31] okay? So, thing number one that you need
+[12:33] to do is find out your time to peak. How
+[12:35] many weeks can you push without
+[12:37] performance falling off a cliff? That's
+[12:38] thing number one. Thing number two, how
+[12:40] many blocks does it take you to
+[12:41] demonstrate a PR? Let's just assume
+[12:43] three for most intermediates.
+[12:45] Then I want you to set the training
+[12:47] blocks up and I want you to leave some
+[12:49] intensity in the tank at the end of each
+[12:50] block. So, a good rule of thumb is block
+[12:52] one RPE 7.5 to 8, block two RPE 8 to
+[12:56] 8.5, and then block three send it. You
+[12:58] can go RPE 9 to 10, okay? But don't keep
+[13:01] just sending it every single training
+[13:03] block cuz you keep just rinsing your
+[13:05] account and never actually depositing
+[13:06] anything towards those PRs, okay? After
+[13:09] each one of these training blocks, do a
+[13:11] small block review process. It doesn't
+[13:12] need to be a really complicated process.
+[13:14] Just have a look through what worked
+[13:16] well. Was my block length appropriate?
+[13:19] Did I actually peak on the week I
+[13:20] thought I would? And then make a couple
+[13:22] small changes into the next block. Thank
+[13:24] you so much for watching this video. If
+[13:26] you need further help, I have a free
+[13:27] training program here. This will help
+[13:29] you with this peaking method. Obviously,
+[13:31] if you want me to set your peak up for
+[13:33] you, cuz it can be quite complicated,
+[13:35] top link in the description, you can
+[13:36] book a call with me and I'll do it for
+[13:37] you. Or if you click the second link, it
+[13:39] will explain how to do this process
+[13:41] yourself, and it will give you access to
+[13:43] my full strength training system that
+[13:45] you can just steal and apply yourself.
+[13:47] Thanks so much for watching, and until
+[13:48] next time, I'll catch you in the next
+[13:49] video.

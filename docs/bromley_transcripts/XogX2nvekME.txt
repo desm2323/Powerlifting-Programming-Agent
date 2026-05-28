@@ -1,0 +1,74 @@
+# Exercise Selection Tips: How to Pick Your Accessory Work
+# Author: Alexander Bromley (Empire Barbell / Base Strength)
+# URL: https://www.youtube.com/watch?v=XogX2nvekME
+# Video ID: XogX2nvekME
+#
+# Key timestamps cited in expert_knowledge.py:
+#   1:10  PURPOSE of accessory movements: complement the main lift
+#   2:14  General development is THE primary purpose (most overlooked)
+#   2:42  Novices should widen the base — variety, not specialization
+#   3:33  Bodybuilding-style accessory builds size + supports strength
+#   3:44  Individual variation — muscle storage differs by build (his
+#         shoulders grew from pressing, arms didn't)
+#   5:02  General development → more efficient, tighter positions
+#   5:27  Targeted development only appropriate for mid-intermediates+
+#   5:55  Most lifters just need general dev + basic variations
+#   6:43  BRIAN CARROLL'S FRAMEWORK: mechanically similar movements
+#   7:02  Examples: pause squat, close grip bench
+#   8:09  Good morning = compound accessory, less mechanically similar
+#         (still hits hip extension but neurologically different)
+#   8:17  Dips = fantastic upper body builder, indirect carryover
+#   9:30  ADVANTAGED movements: better leverage, shorter ROM, more weight
+#         per unit effort. CNS / force production / strength training.
+#   9:55  Examples: board press, partials
+#  10:13  Trap bar — weight closer to hips → shorter "leverage arm" →
+#         can lift more
+#  10:25  Banded work: overloads the top → trains nervous system to
+#         liberate motor units faster
+#  10:50  PEAKING ADVANTAGE: heavy walkouts before meet = old-school CNS
+#         prep that carries to contest day
+#  11:40  DISADVANTAGED movements: longer ROM, more time under tension,
+#         worse leverage, lower load
+#  12:04  Disadvantaged is like being a newbie — high effort but
+#         inefficient → low systemic stress despite hard work
+#  12:30  LOUIS SIMMONS / WESTSIDE: maxed every week because variations
+#         were novel + disadvantaged enough to limit fatigue
+#  13:51  Disadvantaged great for HYPERTROPHY — ROM + TUT = Weider
+#         principles (size development)
+#  14:20  BLOCK-PHASE MAPPING:
+#           Base/Volume phase → disadvantaged + variety + isolation
+#           Peak phase       → advantaged + heavier specific patterns
+#  14:48  Front squats heavy = hypertrophy, but NOT great near a comp
+#         (too different from comp squat to carry over directly)
+#  15:35  DECISION FRAMEWORK: ask "do I need mass or force production?"
+#  16:55  FOCUS TARGETING (weakness fixes) — only for intermediates+
+#  17:41  Example: LeRoy Walker — 700lb bench miss at 3/4 lockout (poor
+#         lockout strength despite explosive off the chest)
+#  19:50  Peak phase = heavier work, more specific advantaged patterns
+#  20:24  Compound accessories don't impact main-lift recovery — less
+#         mechanically similar = less specific fatigue
+#  22:46  Lighter accessories (machines / cables / DBs / isolation):
+#         easy to recover from, can train at high frequency (2-3x/wk)
+#  23:33  Drop high-volume accessory work going into peak prep — easy
+#         way to eliminate extra stress
+#  24:40  WEAKNESS TARGETING: pattern vs muscle (two valid approaches)
+#  25:50  PATTERN TARGETING: train at the sticking point (pin presses,
+#         dead-stop work, pause at failure spot)
+#  27:18  MUSCLE TARGETING: reverse-engineer which muscle failed first
+#         (lockout = triceps usually, or shoulder stability)
+#  28:23  EXAMPLE BASE PHASE bench day:
+#           Bench 5×5+, Close-grip bench, Weighted dips 4×10-12,
+#           DB bench, French press, Cable pushdown
+#  33:00  HIGH-REP WAKE-UP for dormant muscles (15-20 reps, light load,
+#         deep burn) — teaches motor recruitment
+#  33:48  Kickbacks with pink 5-lb DBs × 30 reps in steep forward bend
+#  35:35  EXAMPLE PEAK PHASE bench day:
+#           Bench top triple + back-off, Pin bench + close grip,
+#           JM press, Band pushdowns (blood flow, tendon work)
+#  36:32  JM press = great heavy tricep exercise, transfers to comp
+#  38:32  Order in session: track precisely on top, chase stress on
+#         lighter accessories
+
+[Timestamps above are the citation anchors referenced in
+ expert_knowledge.py. Re-run scripts/ingest_ben_videos.py to regenerate
+ the full timestamped transcript body.]

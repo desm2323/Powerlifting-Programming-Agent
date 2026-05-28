@@ -1,0 +1,47 @@
+# Periodization Explained: Strength vs. Hypertrophy Program Design
+# Author: Sebastian Oreb (Australian Strength Coach)
+# URL: https://www.youtube.com/watch?v=xZ2QTewSMuk
+# Video ID: xZ2QTewSMuk
+#
+# Key timestamps cited in expert_knowledge.py:
+#   0:02  reframes "strength vs hypertrophy" → "performance vs aesthetics"
+#         (strength is needed for hypertrophy and vice versa)
+#   3:07  periodization definition (manipulation + sequencing of variables)
+#   3:58  periodization ≠ programming; programs sit within the periodized plan
+#   5:04  man who chases two rabbits doesn't eat — equal emphasis on multiple
+#         qualities → diluted outcomes; successful multi-quality always
+#         prioritizes ONE main quality with others on maintenance
+#   6:36  performance vs aesthetics differences (specificity definitions differ)
+#   8:32  hypertrophy specificity = target muscle is the limiting factor
+#  10:42  default 16-week long-term plan when no comp date is given
+#  12:21  conjugate / undulating / linear / block periodization — INTEGRATE,
+#         don't pick one religiously
+#  13:43  general premise: high volume + variation at start, taper to peak
+#  14:54  pyramid analogy — peak only as high as base is wide
+#  16:09  Bompa: accumulation → transmutation → realization (Tudor Bompa book)
+#  18:51  4-week messycle default; 8-week sometimes; 3×6 macrocycle = 4-week
+#         blocks × 4 phases × 3 cycles/year + 4-week Christmas fun phase
+#  22:55  Sebastian's 5-step model: learn-to-move → work-capacity →
+#         hypertrophy → strength → peaking
+#  24:01  learn-to-move: 4 fundamental patterns (squat, hinge, push, pull),
+#         2-3x/wk, low variation, 2-4 weeks
+#  28:23  build work capacity: add one set per week (2 → 3 → 4 → 5)
+#  31:21  hypertrophy phase: 10-20 sets/muscle group/week
+#  33:32  research-backed: start at low end (10), only increase if plateau
+#  35:38  hypertrophy rep range 5-30 (Brad Schoenfeld meta-analysis);
+#         target muscle = limiting factor; mechanical tension > absolute load
+#  38:32  strength phase: 80%+ 1RM, ≤6 reps for main lifts
+#  39:55  strength volume: 6-12 sets per MOVEMENT PATTERN per week
+#         (Rhea & colleagues ~2009; different denominator from hypertrophy)
+#  40:45  conjugate within strength phase: accessory work uses hypertrophy
+#         ranges, not 80%+
+#  41:45  peaking: maximize specificity, minimize volume by removing
+#         non-specific work; maintain intensity (not "go lighter")
+#  43:09  aesthetics doesn't need peaking phase — peak is body composition
+#         via nutrition
+#  43:53  MONTHLY UNDULATING PERIODIZATION: alternate hypertrophy + strength
+#         phases forever (used by Josh Lenardo, Olympia bodybuilder)
+
+[Timestamps above are the citation anchors referenced in
+ expert_knowledge.py. Re-run scripts/ingest_ben_videos.py to regenerate
+ the full timestamped transcript body.]

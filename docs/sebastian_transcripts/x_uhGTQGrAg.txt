@@ -1,0 +1,55 @@
+# Best Training Splits for Strength & Hypertrophy (Complete Guide)
+# Author: Sebastian Oreb (Australian Strength Coach)
+# URL: https://www.youtube.com/watch?v=x_uhGTQGrAg
+# Video ID: x_uhGTQGrAg
+#
+# Key timestamps cited in expert_knowledge.py:
+#   0:25  push/pull split critique — superset push+pull instead (twice the
+#         work in same time)
+#   1:53  onboarding question #1: how many days/wk can the lifter allocate?
+#   3:08  inverse relationship: lower frequency → higher intensity per session
+#   4:48  research: 1x vs 2x vs 3x/wk per body part — no big diff when
+#         volume equated. Practical: 2x optimal.
+#   6:36  optimal hypertrophy volume: 10-20 sets/MUSCLE GROUP/week
+#  10:33  research is neutral when volume equated; practical wins 2x/wk
+#  11:43  skill acquisition is different — Olympic lifters 7x/wk daily
+#  14:49  strength volume: 6-12 sets per MOVEMENT PATTERN per week
+#         (Rhea & colleagues 2009; movement pattern ≠ muscle group)
+#  17:53  2-day split: take to failure (5 days recovery available)
+#  19:08  2-day split — DO whole body, NOT upper/lower (saturating one body
+#         half = junk volume in second half of session)
+#  21:04  3-day split: whole-body each session OK
+#  21:37  Lilybridge split: squat+DL one day, bench day, whole-body day
+#         (alternates heavy SQ + light DL with reverse next week)
+#  23:25  PPL critique (for 3-day): insufficient quad + upper-push frequency
+#  26:55  DUP (Daily Undulating Periodization): SQ+BN+DL every day with
+#         heavy/moderate/light rotation. Good for skill, too much for elite,
+#         needs added upper back work.
+#  29:24  Strength System 3-day: squat day / upper body / deadlift+quad
+#         accessory (e.g. leg extensions on DL day = 2nd quad freq)
+#  32:09  Female-variation: more lower body (whole-body 3rd day rather than
+#         second upper). Caveat: it's user-requested, not blanket advice.
+#  33:26  4-day split (Sebastian's preferred): upper horizontal / lower
+#         quad-focus / upper vertical / lower posterior-focus
+#  34:51  4-day split female variation: 1 upper + 1 whole-body
+#  35:46  5-day split (upper end of his recommendations)
+#  39:24  Bro split (chest/back/legs/shoulders/arms): only 1x/wk frequency +
+#         4 upper / 1 lower = chicken legs
+#  43:21  Poliquin 5-day rotation (Charles Poliquin signature)
+#  44:38  Sebastian's preferred 5-day: 2 squat + 1 deadlift + 2 upper
+#         (deadlifts need more recovery than squats — disagrees with
+#         Poliquin's symmetric squat-DL priority)
+#  46:25  heavy spine-loading ceiling: once/wk for high-absolute-strength
+#         athletes (why Lilybridge stacks squat+deadlift same day)
+#  46:25  training morale: love-of-lift biases performance (squatterers love
+#         squat sessions, hate DL sessions; vice versa)
+#  47:43  6-day split — reserved for "needs daily gym" cases (mental
+#         health, routine); PPL × 2, deadlift on lower NOT pull day
+#  30:24  5-day recovery ceiling — muscles stop growing after ~5 days off
+#  21:18  3-day Lilybridge specifics: works because heavy spine load only 1/wk
+#  26:32  ABSOLUTE vs RELATIVE strength: high absolute → less frequency,
+#         more rest; light lifter w/ high relative → can train more often
+
+[Timestamps above are the citation anchors referenced in
+ expert_knowledge.py. Re-run scripts/ingest_ben_videos.py to regenerate
+ the full timestamped transcript body.]

@@ -1,0 +1,34 @@
+# How I Write Programs | Exercise Selection & Order
+# Author: Sebastian Oreb (Australian Strength Coach)
+# URL: https://www.youtube.com/watch?v=tjC6ilWMEMM
+# Video ID: tjC6ilWMEMM
+#
+# Key timestamps cited in expert_knowledge.py:
+#   0:08  exercise redundancy concept introduced
+#   1:46  selection + order cannot be separated; first ex serves trainee goal
+#   3:54  sprinters analogy (first ex = best at; place highest priority first)
+#   4:39  law of diminishing returns; first set > second set
+#   6:02  exercise redundancy definition (same muscle, same joint actions, same resistance profile)
+#   7:09  more than one secondary exercise — keep adding what was neglected
+#   7:28  degree of difficulty decreases through the session
+#   8:01  ancillary exercises (low-cost feel-good or joint-health closers)
+#  11:25  warm-ups don't count as training volume (no progressive overload)
+#  13:35  redundancy exception: high-absolute-strength athletes near comp
+#  14:30  fatigue management for advanced lifters; specificity priority
+#  16:11  conventional DL = most fatiguing; weekly skill, fortnightly heavy
+#  18:16  top set + variation model (vs top set + back-down)
+#  19:13  Halfthor example: 1×1 conv DL + 2×5 snatch-grip deficit DL (~60% TM)
+#  22:34  8-CATEGORY MODEL for structural balance
+#  23:23  knee-dominant vs hip-dominant squat distinction
+#  27:08  loadability per movement profile (compound vs isolation vs stretched)
+#  28:00  flared bench / knee-over-toes / stiletto squat — NOT for 1RM
+#  29:50  pec tear at full stretch (weakest contractile length)
+#  35:50  rectus femoris is biarticular — neglected in compound squats → leg extension
+#  39:30  hip thrust = fully shortened glute; deficit/snatch-grip DL = fully lengthened glute
+#  40:24  short head of biceps femoris — only knee flexion targets it → leg curl, Nordic
+#  41:11  peaking example with top-set + variation (low-bar squat 1×1 + 2×4 paused)
+#  42:25  4-week peak phase (significant volume reduction; longer than 4wk → detraining)
+
+[Timestamps above are the citation anchors referenced in
+ expert_knowledge.py. Re-run scripts/ingest_ben_videos.py to regenerate
+ the full timestamped transcript body.]

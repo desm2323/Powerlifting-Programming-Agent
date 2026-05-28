@@ -1,0 +1,49 @@
+# How to Progress Accessory Exercises
+# Author: Alexander Bromley (Empire Barbell / Base Strength)
+# URL: https://www.youtube.com/watch?v=czEsWD56hCU
+# Video ID: czEsWD56hCU
+#
+# Key timestamps cited in expert_knowledge.py:
+#   0:23  context — progressing main lifts is well-covered; accessories are
+#         the sticky spot because fatigue is unpredictable down the workout
+#   0:55  THE CORE PROBLEM: can't predict accessory performance the way you
+#         can the main lift (fatigue accumulates from main + secondary)
+#   1:21  workout-structure overview (main → secondary main → primary
+#         accessory → secondary accessory) — fatigue gradient
+#   2:38  main lift first: heaviest + most specific exercise
+#   3:46  accessory split into primary (compound, taxing) + secondary
+#         (isolation, less taxing) — definitions
+#   4:25  effort gradient: low RIR warranted at the END of workout, not the
+#         start. Highest effort on small exercises.
+#   5:46  secondary main lift fatigue trickles into primary accessory
+#   6:23  WEEK 1 starts easier (dirt road analogy — start on asphalt for
+#         traction, build momentum, give room to run)
+#   7:32  TWO valid progression methods for accessories
+#   7:43  Method 1: DYNAMIC DOUBLE PROGRESSION (DDP). Meet rep count first
+#         at a fixed weight, THEN add weight. Works for exercise #1 after
+#         the main lift; breaks down further into the workout.
+#   8:18  DDP mechanics example: 4×12 @ 225 → got 12/10/10/9 → keep weight
+#         until all 4×12, then add
+#   9:08  DDP fails when fatigue from preceding exercises is unpredictable
+#   9:14  Method 2: REP-RANGE METHOD (Russian bodybuilding / preferred)
+#  10:06  bodybuilder analogy: 30s rest drop sets early in workout → can't
+#         predict downstream performance → must wing it on accessories
+#  10:24  Control what you can: fix the SETS (e.g. 4 sets)
+#  10:31  Fix the REP RANGE (e.g. 8-12)
+#  10:45  BLOCK-LEVEL SHIFT: run a rep range for ~4 weeks, then shift it
+#         (8-12 → 6-8) OR swap the exercise for novelty
+#  11:20  On-the-fly weight adjustment: hit hard 12 → jump up for 10 → drop
+#         down when can't hit lower bound of range → stay in range
+#  11:43  Variable loading is GOOD — boring to keep same weight all sets
+#  12:24  RPE TARGET: recommend reaching RPE 10 on accessory work
+#  12:38  Default range RPE 7-8 — don't out your spine going to failure
+#  13:00  Block structure: 4 weeks at rep range, then adjust range or
+#         swap exercise
+#  13:25  WHY THIS WORKS: accessories don't accrue fatigue at the rate
+#         main lifts do (hamstring curls vs barbell DL)
+#  13:44  "go ham, go nuts, the world is yours" — chase stress on
+#         accessories, focus on a few variables (sets + rep range + effort)
+
+[Timestamps above are the citation anchors referenced in
+ expert_knowledge.py. Re-run scripts/ingest_ben_videos.py to regenerate
+ the full timestamped transcript body.]
