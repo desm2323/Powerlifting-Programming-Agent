@@ -1,7 +1,18 @@
 # Core agent runs with the standard library only.
-# The LLM reasoning layer is optional — install this to enable it,
-# then set ANTHROPIC_API_KEY (and optionally LLM_MODEL).
-anthropic>=0.39.0
+# The LLM reasoning layer is optional — install and set OPENAI_API_KEY
+# (model override via LLM_MODEL, default gpt-4o-mini).
+openai>=1.0.0
+
+# Auto-loads .env at startup so keys don't have to live in the shell
+python-dotenv>=1.0.0
+
+# Browser chat UI
+streamlit>=1.30.0
 
 # Dev / testing
 pytest>=8.0.0
+
+# Build-time only: fetches transcripts that ground expert_knowledge.py.
+# Used by scripts/ingest_ben_videos.py — the agent itself never calls
+# YouTube at runtime. Transcripts are committed under docs/ben_transcripts/.
+youtube-transcript-api>=0.6.0

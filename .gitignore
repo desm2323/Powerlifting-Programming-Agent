@@ -5,3 +5,6 @@ data/state.json
 .pytest_cache/
 .venv/
 venv/
+.claude/
+CLAUDE.md
+docs/PROJECT_BRIEF.md
