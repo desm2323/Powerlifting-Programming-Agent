@@ -69,7 +69,10 @@ def _week_rows(state: dict, week: int, in_deload: bool = False) -> list[dict]:
         for ex in day.get("exercises", []):
             tm = (state["lifts"].get(ex.get("lift"), {}).get("training_max")
                   if ex.get("lift") in ("squat", "bench", "deadlift") else None)
-            c = blocks.compute_exercise_load(ex, tm, block["type"], week, in_deload)
+            c = blocks.compute_exercise_load(
+                ex, tm, block["type"], week, in_deload,
+                duration_weeks=block.get("duration_weeks"),
+                readiness=state.get("readiness", 1.0))
             show_load = c["top_weight"] is not None
             wt_str = f"{c['top_weight']} kg" if show_load else "RPE-only"
             plates = loading.plate_breakdown(c["top_weight"]) if show_load else []
@@ -181,7 +184,8 @@ _ROLE_BADGE = {
 
 
 def _render_day_card(state: dict, day: dict, block_type: str,
-                     week: int, in_deload: bool) -> None:
+                     week: int, in_deload: bool,
+                     duration_weeks: int | None = None) -> None:
     """Render a single training day as a bordered card with role-grouped
     exercises — way more readable than a plain dataframe row.
 
@@ -212,7 +216,10 @@ def _render_day_card(state: dict, day: dict, block_type: str,
             for ex in items:
                 tm = (state["lifts"].get(ex.get("lift"), {}).get("training_max")
                       if ex.get("lift") in ("squat", "bench", "deadlift") else None)
-                c = blocks.compute_exercise_load(ex, tm, block_type, week, in_deload)
+                c = blocks.compute_exercise_load(
+                    ex, tm, block_type, week, in_deload,
+                    duration_weeks=duration_weeks,
+                    readiness=state.get("readiness", 1.0))
                 # Hide kg / %TM / plates when intensity_pct signals a
                 # non-bar exercise (DB lateral raise, cable pushdown,
                 # machine). The LLM sets intensity_pct=0 in that case.
@@ -348,7 +355,8 @@ def _season_panel(chat: Chat) -> None:
                     st.markdown("**Program that was run:**")
                     for day in plan_days:
                         _render_day_card(state, day, h.get("type", "volume"),
-                                         week=1, in_deload=False)
+                                         week=1, in_deload=False,
+                                         duration_weeks=h.get("duration_weeks"))
                 else:
                     st.caption("(this block was archived before per-block "
                                "program persistence — no detailed plan stored)")
@@ -374,7 +382,8 @@ def _season_panel(chat: Chat) -> None:
                 for day in plan_days:
                     _render_day_card(state, day, active["type"],
                                      active.get("week", 1),
-                                     active.get("in_deload", False))
+                                     active.get("in_deload", False),
+                                     duration_weeks=active.get("duration_weeks"))
             else:
                 st.caption("(no weekly plan structured yet)")
 
@@ -461,7 +470,8 @@ def _program_panel(chat: Chat) -> None:
         else:
             for day in plan_days:
                 _render_day_card(state, day, block["type"],
-                                 current_week, in_deload)
+                                 current_week, in_deload,
+                                 duration_weeks=block.get("duration_weeks"))
 
     # ---- Full Block tab: nested week-tabs, each rendered as day-cards.
     # Same readable format as the "This Week" tab — switch between weeks
@@ -480,19 +490,14 @@ def _program_panel(chat: Chat) -> None:
                 wk = wk_idx + 1
                 with week_tab:
                     mod = blocks.week_modifier(block["type"], wk)
-                    intensity_pct = int(round(mod["intensity_mult"] * 100))
-                    set_delta = mod.get("set_delta", 0)
-                    rep_delta = mod.get("rep_delta", 0)
-                    wave_bits = [f"📈 {mod['label']}",
-                                 f"intensity ×{mod['intensity_mult']:.2f} ({intensity_pct}%)"]
-                    if set_delta:
-                        wave_bits.append(f"sets {'+' if set_delta > 0 else ''}{set_delta}")
-                    if rep_delta:
-                        wave_bits.append(f"reps {'+' if rep_delta > 0 else ''}{rep_delta}")
-                    st.caption("  ·  ".join(wave_bits))
+                    reps, rpe = blocks.top_set_for_week(
+                        block["type"], wk, duration_weeks=duration)
+                    st.caption(f"📈 {mod['label']}  ·  "
+                               f"top set ≈ {reps} rep(s) @ RPE {rpe}")
                     for day in plan_days:
                         _render_day_card(state, day, block["type"], wk,
-                                         in_deload=False)
+                                         in_deload=False,
+                                         duration_weeks=duration)
 
 
 # --- main ------------------------------------------------------------------

@@ -66,6 +66,22 @@ def test_load_for_intensity():
     assert loading.load_for_intensity(150, 0.85) == 127.5
 
 
+def test_load_for_rpe_inverts_est_1rm():
+    # load_for_rpe is the inverse of est_1rm_from_rpe: a weight prescribed for
+    # 3 reps @ RPE 9 against a 150 1RM should estimate back to ~150.
+    w = loading.load_for_rpe(150, 3, 9)
+    assert abs(loading.est_1rm_from_rpe(w, 3, 9) - 150) <= 2.5
+
+
+def test_load_for_rpe_heavier_at_higher_rpe_and_lower_reps():
+    # A single at RPE 9 is heavier than a single at RPE 7.
+    assert loading.load_for_rpe(150, 1, 9) > loading.load_for_rpe(150, 1, 7)
+    # Fewer reps at the same RPE is heavier.
+    assert loading.load_for_rpe(150, 1, 8) > loading.load_for_rpe(150, 5, 8)
+    # RPE-9 single off a 150 1RM = 140kg (1 RIR), not a true max.
+    assert loading.load_for_rpe(150, 1, 9) == 140.0
+
+
 def test_plate_breakdown():
     # 100kg on a 20kg bar -> 40kg/side -> 25 + 15
     assert loading.plate_breakdown(100) == [25, 15]
@@ -788,43 +804,73 @@ def test_blocks_all_four_types_defined():
         assert dl["weekly_set_target"] < rx["weekly_set_target"]
 
 
-def test_blocks_week_wave_differs_week_to_week():
-    """Real coaching never has identical weeks — the wave must produce
-    different intensity multipliers across the productive weeks of a block."""
-    for block_type in ("volume", "strength", "peaking"):
-        mults = [blocks.week_modifier(block_type, w)["intensity_mult"]
-                 for w in range(1, 5)]
-        assert len(set(mults)) > 1, f"{block_type} wave is flat"
-
-
-def test_blocks_compute_exercise_load_applies_wave():
-    """The exercise load helper must apply the block's wave to the base
-    intensity. Week 4 of strength is heavier than week 1."""
-    ex = {"name": "Squat", "lift": "squat", "role": "primary",
-          "sets": 4, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9.0}
-    wk1 = blocks.compute_exercise_load(ex, 150, "strength", 1)
-    wk4 = blocks.compute_exercise_load(ex, 150, "strength", 4)
+def test_blocks_top_set_climbs_to_heavy_finish():
+    """The heavy TOP SET (1 set) must climb across the block to a genuinely
+    heavy finish — week 4 of a 4-week strength block is heavier than week 1,
+    and the final week reaches RPE 9 (Ben's 4-week RPE wave ends at 9)."""
+    top = {"name": "Squat (top set)", "lift": "squat", "role": "primary",
+           "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9.0}
+    wk1 = blocks.compute_exercise_load(top, 150, "strength", 1, duration_weeks=4)
+    wk4 = blocks.compute_exercise_load(top, 150, "strength", 4, duration_weeks=4)
     assert wk4["top_weight"] > wk1["top_weight"]
+    assert wk4["rpe_cap"] == 9.0
+    # Reps step down toward a heavy single by the final week (triples->singles).
+    assert wk4["reps"] < wk1["reps"]
     # Deload override produces the deload prescription, not the exercise's.
-    dl = blocks.compute_exercise_load(ex, 150, "strength", 3, in_deload=True)
+    dl = blocks.compute_exercise_load(top, 150, "strength", 3, in_deload=True)
     assert dl["week_label"] == "Deload"
     assert dl["rpe_cap"] <= 7.5
 
 
+def test_blocks_backoff_static_in_strength_climbs_in_volume():
+    """Back-off behaviour is block-type-dependent (the tri-source rule):
+    in a STRENGTH block the back-off is held static while the top set drives
+    (Ben); in a VOLUME block the back-off itself climbs week to week
+    (Sebastian: add load weekly; Bromley: float the weight up)."""
+    backoff = {"name": "Squat (back-offs)", "lift": "squat", "role": "primary",
+               "sets": 4, "reps": 5, "intensity_pct": 0.68, "rpe_cap": 7.0}
+    s1 = blocks.compute_exercise_load(backoff, 150, "strength", 1, duration_weeks=4)
+    s4 = blocks.compute_exercise_load(backoff, 150, "strength", 4, duration_weeks=4)
+    assert s4["top_weight"] == s1["top_weight"]   # strength back-off: static
+
+    v1 = blocks.compute_exercise_load(backoff, 150, "volume", 1, duration_weeks=4)
+    v4 = blocks.compute_exercise_load(backoff, 150, "volume", 4, duration_weeks=4)
+    assert v4["top_weight"] > v1["top_weight"]    # volume back-off: climbs
+
+
 def test_blocks_rpe_waves_across_block():
-    """An exercise prescribed at RPE 8 should NOT stay at RPE 8 across
-    all weeks. Ben's framework climbs RPE alongside intensity — early
-    weeks lighter (lower RPE), late weeks heavier (higher RPE)."""
-    ex = {"name": "Squat", "lift": "squat", "role": "primary",
-          "sets": 4, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 8.0}
-    rpes = [blocks.compute_exercise_load(ex, 150, "strength", w)["rpe_cap"]
+    """The top set's RPE must climb across the block — early weeks lighter
+    (lower RPE), final week heaviest. 4-week strength reproduces [6,7,8,9]."""
+    top = {"name": "Squat (top set)", "lift": "squat", "role": "primary",
+           "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9.0}
+    rpes = [blocks.compute_exercise_load(top, 150, "strength", w,
+                                         duration_weeks=4)["rpe_cap"]
             for w in range(1, 5)]
-    # Must be strictly non-decreasing and end higher than it started.
-    assert rpes[-1] > rpes[0]
-    for a, b in zip(rpes, rpes[1:]):
-        assert b >= a
-    # Final week's RPE should be at or near the prescribed cap.
-    assert rpes[-1] >= 8.0
+    assert rpes == [6.0, 7.0, 8.0, 9.0]
+
+
+def test_blocks_readiness_caps_top_set():
+    """Low readiness shaves the prescribed top-set RPE (and therefore the
+    bar weight) — fatigue modulates the RPE target, not kg directly."""
+    top = {"name": "Squat (top set)", "lift": "squat", "role": "primary",
+           "sets": 1, "reps": 1, "intensity_pct": 0.85, "rpe_cap": 9.0}
+    fresh = blocks.compute_exercise_load(top, 150, "strength", 4,
+                                         duration_weeks=4, readiness=1.0)
+    tired = blocks.compute_exercise_load(top, 150, "strength", 4,
+                                         duration_weeks=4, readiness=0.5)
+    assert tired["rpe_cap"] < fresh["rpe_cap"]
+    assert tired["top_weight"] < fresh["top_weight"]
+
+
+def test_blocks_peaking_never_prescribes_failure():
+    """Peaking top set must stay at or below RPE 9 on the final week — Ben:
+    never train the main lifts to failure."""
+    top = {"name": "Squat (top set)", "lift": "squat", "role": "primary",
+           "sets": 1, "reps": 1, "intensity_pct": 0.92, "rpe_cap": 9.0}
+    for n in (3, 4):
+        out = blocks.compute_exercise_load(top, 150, "peaking", n,
+                                           duration_weeks=n)
+        assert out["rpe_cap"] <= 9.0
 
 
 def test_primary_with_zero_intensity_falls_back_to_block_default():
@@ -1004,19 +1050,21 @@ def test_blocks_accessory_preserves_prescribed_sets_reps():
     assert out["intensity_pct"] == 0.60
 
 
-def test_blocks_primary_still_waves_when_accessory_skipped():
-    """Sanity: scoping the wave to main-lift work doesn't break it for
-    primary/secondary."""
-    primary = {"name": "Squat", "lift": "squat", "role": "primary",
-               "sets": 4, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9.0}
-    secondary = {"name": "Paused squat", "lift": "squat", "role": "secondary",
-                 "sets": 3, "reps": 5, "intensity_pct": 0.70, "rpe_cap": 8.0}
-    p1 = blocks.compute_exercise_load(primary, 150, "strength", 1)
-    p4 = blocks.compute_exercise_load(primary, 150, "strength", 4)
+def test_blocks_top_set_climbs_for_primary_and_secondary_roles():
+    """The RPE-anchored top-set climb applies to any main-lift single-set
+    entry, whether tagged primary or secondary (a secondary top single still
+    ramps week to week)."""
+    primary_top = {"name": "Squat (top set)", "lift": "squat", "role": "primary",
+                   "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9.0}
+    secondary_top = {"name": "Paused squat (top)", "lift": "squat",
+                     "role": "secondary", "sets": 1, "reps": 5,
+                     "intensity_pct": 0.70, "rpe_cap": 8.0}
+    p1 = blocks.compute_exercise_load(primary_top, 150, "strength", 1, duration_weeks=4)
+    p4 = blocks.compute_exercise_load(primary_top, 150, "strength", 4, duration_weeks=4)
     assert p4["top_weight"] > p1["top_weight"]
 
-    s1 = blocks.compute_exercise_load(secondary, 150, "strength", 1)
-    s4 = blocks.compute_exercise_load(secondary, 150, "strength", 4)
+    s1 = blocks.compute_exercise_load(secondary_top, 150, "strength", 1, duration_weeks=4)
+    s4 = blocks.compute_exercise_load(secondary_top, 150, "strength", 4, duration_weeks=4)
     assert s4["top_weight"] > s1["top_weight"]
 
 
@@ -1290,10 +1338,11 @@ def test_commit_block_populates_prescriptions_immediately():
         agent.commit_block("strength", 4, "ready to express force", [])
         pending = agent.state["pending_prescriptions"]
         assert set(pending.keys()) == {"squat", "bench", "deadlift"}
-        # Strength wave week 1: intensity_mult 0.92, rep_delta +1.
-        # Base 4x3 @ 85% on squat TM 150 -> week 1: 4x4 @ ~78.2% = 117.5kg.
+        # The engine tracks the heavy TOP SET (1 set). Strength week 1 of a
+        # 4-week block: RPE wave start = RPE 6, reps ramp from a single up to
+        # 4 in week 1. load_for_rpe(150, 4, 6) = 117.5kg.
         sq = pending["squat"]
-        assert sq["sets"] == 4 and sq["reps"] == 4
+        assert sq["sets"] == 1 and sq["reps"] == 4
         assert sq["top_weight"] == 117.5
 
 
@@ -1388,10 +1437,11 @@ def test_prescription_persisted_by_plan():
         agent = _new_agent(path, with_block=True)
         agent.plan_next("squat")
         rx = agent.state["pending_prescriptions"]["squat"]
-        # Volume wave week 1: intensity_mult 0.92. Base 4x6 @ 72% on
-        # TM 150 -> 4x6 @ 66.2% = 99.4 -> rounds to 100.0.
-        assert rx["sets"] == 4 and rx["reps"] == 6
-        assert rx["top_weight"] == 100.0
+        # Engine tracks the heavy TOP SET (1 set). Volume week 1 of a 4-week
+        # block: top set ramps to 6 reps @ RPE 6.5 -> load_for_rpe(150,6,6.5)
+        # = 115.0kg.
+        assert rx["sets"] == 1 and rx["reps"] == 6
+        assert rx["top_weight"] == 115.0
         assert rx["block_type"] == "volume"
 
 
@@ -1447,6 +1497,30 @@ def test_deload_completion_archives_block():
         # Block done -> archived -> current block is now empty.
         assert agent.state["block"]["type"] is None
         assert len(agent.state["block_history"]) == 1
+
+
+def test_progress_moves_anchor_toward_best_est_capped():
+    """On a 'progress' decision the working-1RM anchor rises toward the
+    latest estimated 1RM, but no more than the per-lift safety cap in one
+    session (a fluke single can't spike all future loads)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = _new_agent(os.path.join(tmp, "s.json"), with_block=True)
+        agent.state["lifts"]["squat"]["training_max"] = 150.0
+        agent.state["lifts"]["squat"]["best_est_1rm"] = 170.0  # big PR logged
+        agent._apply_decision("progress", "squat", agent.state["block"])
+        # Squat cap is +5/session -> anchor rises 150 -> 155, not 170.
+        assert agent.state["lifts"]["squat"]["training_max"] == 155.0
+
+
+def test_progress_holds_anchor_when_no_new_estimate():
+    """If the latest estimate isn't above the anchor, 'progress' holds the
+    anchor rather than chasing noise upward by a flat amount."""
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = _new_agent(os.path.join(tmp, "s.json"), with_block=True)
+        agent.state["lifts"]["squat"]["training_max"] = 150.0
+        agent.state["lifts"]["squat"]["best_est_1rm"] = 150.0
+        agent._apply_decision("progress", "squat", agent.state["block"])
+        assert agent.state["lifts"]["squat"]["training_max"] == 150.0
 
 
 def test_plan_during_deload_uses_deload_prescription():
@@ -2938,46 +3012,38 @@ def test_all_bromley_tools_in_schemas():
 
 # --- block wave: weeks must be strictly distinct through week 5 ------------
 
-def test_block_wave_week4_and_week5_differ():
-    """In a 5-week block, week 4 and week 5 must produce different
-    prescriptions (a wave shorter than the block would clamp them to the
-    same entry)."""
-    for bt in blocks.VALID_BLOCK_TYPES:
-        wk4 = blocks.week_modifier(bt, 4)
-        wk5 = blocks.week_modifier(bt, 5)
-        # At least intensity_mult OR rpe_delta OR set_delta must differ.
-        diff = (wk4["intensity_mult"] != wk5["intensity_mult"]
-                or wk4["rpe_delta"] != wk5["rpe_delta"]
-                or wk4["set_delta"] != wk5["set_delta"]
-                or wk4["rep_delta"] != wk5["rep_delta"])
-        assert diff, f"{bt}: week 4 == week 5 (wave too short)"
+def test_block_wave_top_set_distinct_each_week_5wk():
+    """In a 5-week block the top set must produce a distinct (reps, rpe)
+    target each week — no clamped repeats — for blocks that build toward a
+    peak (strength/volume). The peak lands on the final week."""
+    for bt in ("volume", "strength"):
+        targets = [blocks.top_set_for_week(bt, w, duration_weeks=5)
+                   for w in range(1, 6)]
+        assert len(set(targets)) == 5, f"{bt}: a week repeats in a 5-wk block"
+        # Final week is the heaviest top set (highest RPE).
+        assert targets[-1][1] == max(t[1] for t in targets)
 
 
-def test_block_wave_all_5_weeks_distinct():
-    """Weeks 1-5 of every block_type's wave must be pairwise distinct on
-    at least one of (intensity_mult, rpe_delta, set_delta, rep_delta)."""
-    for bt in blocks.VALID_BLOCK_TYPES:
-        seen = set()
-        for wk in range(1, 6):
-            mod = blocks.week_modifier(bt, wk)
-            key = (mod["intensity_mult"], mod["rpe_delta"],
-                   mod["set_delta"], mod["rep_delta"])
-            assert key not in seen, (
-                f"{bt}: week {wk} duplicates an earlier week's modifiers")
-            seen.add(key)
+def test_block_wave_load_climbs_across_block():
+    """The top-set LOAD must strictly increase week to week across a block
+    (the whole point: it gets heavier toward a peak)."""
+    top = {"name": "Squat (top set)", "lift": "squat", "role": "primary",
+           "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9.0}
+    for bt, n in (("strength", 4), ("volume", 5), ("peaking", 3)):
+        weights = [blocks.compute_exercise_load(top, 150, bt, w,
+                                                duration_weeks=n)["top_weight"]
+                   for w in range(1, n + 1)]
+        for a, b in zip(weights, weights[1:]):
+            assert b >= a, f"{bt}: load went down ({a} -> {b})"
+        assert weights[-1] > weights[0], f"{bt}: load did not climb"
 
 
-def test_block_wave_week6_supported():
-    """6-week blocks must also render without clamping repeats (the wave
-    has 6 entries). Week 6 differs from week 5 on at least one axis."""
-    for bt in blocks.VALID_BLOCK_TYPES:
-        wk5 = blocks.week_modifier(bt, 5)
-        wk6 = blocks.week_modifier(bt, 6)
-        diff = (wk5["intensity_mult"] != wk6["intensity_mult"]
-                or wk5["rpe_delta"] != wk6["rpe_delta"]
-                or wk5["set_delta"] != wk6["set_delta"]
-                or wk5["rep_delta"] != wk6["rep_delta"])
-        assert diff, f"{bt}: week 5 == week 6"
+def test_block_wave_peak_lands_on_final_week_any_length():
+    """The peak must land on the FINAL productive week regardless of block
+    length — a 4-, 5-, or 6-week strength block all finish at RPE 9."""
+    for n in (4, 5, 6):
+        reps, rpe = blocks.top_set_for_week("strength", n, duration_weeks=n)
+        assert rpe == 9.0 and reps == 1, f"{n}-wk strength peak wrong"
 
 
 def test_block_wave_clamps_for_7_plus():

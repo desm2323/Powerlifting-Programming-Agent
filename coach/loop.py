@@ -291,10 +291,20 @@ class Agent:
         }
         days = []
         for lift in ("squat", "bench", "deadlift"):
+            # Top set + back-off: the engine drives the top set's RPE climb and
+            # holds/climbs the back-off per block type. intensity_pct here is
+            # only used for selection + validation; real loads come from the
+            # RPE trajectory in compute_exercise_load.
             exercises = [{
-                "name": lift.capitalize(), "lift": lift,
-                "role": "primary", "sets": sets, "reps": reps,
+                "name": f"{lift.capitalize()} (top set)", "lift": lift,
+                "role": "primary", "sets": 1, "reps": reps,
                 "intensity_pct": intensity, "rpe_cap": rpe_cap,
+                "rationale": None,
+            }, {
+                "name": f"{lift.capitalize()} (back-offs)", "lift": lift,
+                "role": "primary", "sets": max(2, sets - 1), "reps": reps + 2,
+                "intensity_pct": max(0.55, intensity - 0.12),
+                "rpe_cap": max(5.0, rpe_cap - 1.5),
                 "rationale": None,
             }]
             for acc_name in accessory_picks[lift]:
@@ -342,7 +352,9 @@ class Agent:
             if tm is None:
                 continue
             computed = blocks.compute_exercise_load(
-                ex, tm, block_type, block["week"], in_deload=in_deload)
+                ex, tm, block_type, block["week"], in_deload=in_deload,
+                duration_weeks=block.get("duration_weeks"),
+                readiness=self.state.get("readiness", 1.0))
             self.state["pending_prescriptions"][lf] = {
                 "exercise_name": ex["name"],
                 "sets": computed["sets"], "reps": computed["reps"],
@@ -494,8 +506,10 @@ class Agent:
             for ex in day.get("exercises", []):
                 tm = (self.state["lifts"][ex["lift"]]["training_max"]
                       if ex.get("lift") in memory.LIFTS else None)
-                c = blocks.compute_exercise_load(ex, tm, block_type,
-                                                 block["week"], in_deload)
+                c = blocks.compute_exercise_load(
+                    ex, tm, block_type, block["week"], in_deload,
+                    duration_weeks=block.get("duration_weeks"),
+                    readiness=self.state.get("readiness", 1.0))
                 wt = f"{c['top_weight']} kg" if c["top_weight"] else "-"
                 pct = f"{int(c['intensity_pct']*100)}% TM" if tm else "BW/other"
                 role_tag = (f"[{ex['role']}]" if ex.get("role") and ex["role"] != "primary"
@@ -598,10 +612,17 @@ class Agent:
     def _apply_decision(self, decision: str, lift: str, block: dict):
         if decision == "progress":
             tm = self.state["lifts"][lift]["training_max"]
-            bump = guardrails.cap_tm_increase(lift, 5.0)
-            self.state["lifts"][lift]["training_max"] = loading.round_to_increment(tm + bump)
-            _trace("ACT", f"{lift} training max {tm} -> "
-                          f"{self.state['lifts'][lift]['training_max']} kg")
+            # Move the working-1RM anchor toward the latest estimated 1RM
+            # (a strong logged set), capped per session so one fluke can't
+            # spike all future loads. If the estimate isn't above the anchor,
+            # hold rather than chase noise. Loads then track demonstrated
+            # strength both within and across blocks.
+            best = self.state["lifts"][lift].get("best_est_1rm") or tm
+            step = min(max(0.0, best - tm), guardrails.cap_tm_increase(lift, 5.0))
+            new_tm = loading.round_to_increment(tm + step)
+            self.state["lifts"][lift]["training_max"] = new_tm
+            _trace("ACT", f"{lift} anchor {tm} -> {new_tm} kg "
+                          f"(toward est 1RM {best})")
         elif decision == "deload":
             # Enter a deload WEEK within the current block.
             block["in_deload"] = True

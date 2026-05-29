@@ -52,6 +52,21 @@ def load_for_intensity(tm: float, intensity_pct: float, increment: float = 2.5) 
     return round_to_increment(tm * intensity_pct, increment)
 
 
+def load_for_rpe(one_rm: float, reps: int, rpe: float,
+                 increment: float = 2.5) -> float:
+    """Weight that should make `reps` come out at the target `rpe`, given a
+    current 1RM estimate. The inverse of est_1rm_from_rpe: RPE + reps imply
+    reps-in-reserve, hence reps-to-failure, hence a fraction of 1RM (Epley).
+
+    This is "RPE dictates the weight" made literal — the program prescribes a
+    rep + RPE target and the bar weight follows from the lifter's current
+    strength, instead of a fixed % of a static training max.
+    """
+    reps_in_reserve = max(0.0, 10 - rpe)
+    reps_to_failure = reps + reps_in_reserve
+    return round_to_increment(one_rm / (1 + reps_to_failure / 30), increment)
+
+
 def plate_breakdown(target: float, bar: float = 20.0,
                     available=(25, 20, 15, 10, 5, 2.5, 1.25)) -> list[float]:
     """
