@@ -80,10 +80,38 @@ DIAGNOSE_PHRASES = ("diagnose", "weakness", "weaknesses", "pattern",
 
 EXIT_PHRASES = ("exit", "quit", "bye", "goodbye", "q", ":q")
 
+# A request to DESIGN, CHANGE, or get HELP with the program is conversational
+# and belongs to the LLM (coach_react) even when it mentions a command keyword
+# in passing — e.g. "redesign my block, i also have a weakness...". Without
+# this, the buried "weakness" would hijack the turn into the canned `diagnose`
+# command instead of an actual coaching reply.
+_LLM_REQUEST_MARKERS = (
+    "redesign", "re-design", "re design", "reprogram", "program me",
+    "program my", "design me", "design my", "create", "build", "make me",
+    "set up", "lay out", "change", "swap", "replace", "adjust", "switch",
+    "rewrite", "revise", "tweak", "fix", "can you", "could you", "would you",
+    "i want", "i'd like", "i would like", "help me", "give me a",
+)
+
+
+def _command_match(lower: str, phrases: tuple[str, ...]) -> bool:
+    """True only when a structured-command keyword genuinely drives the
+    message: it leads the sentence, or the whole message is brief. A keyword
+    buried inside a longer sentence is conversational and belongs to the LLM,
+    not a canned engine command."""
+    if any(lower.startswith(p) for p in phrases):
+        return True
+    return len(lower.split()) <= 6 and any(p in lower for p in phrases)
+
 
 def parse_intent(text: str) -> dict:
     """Classify a user message into one of: log / plan / status / diagnose /
-    ask / exit / noop. Returns {"intent": ..., ...slots}."""
+    ask / exit / noop. Returns {"intent": ..., ...slots}.
+
+    Deterministic-first but CONSERVATIVE: only short or lead-with-keyword
+    messages short-circuit to a cheap engine command. Anything that reads like
+    a request or a full sentence falls through to coach_react, so the agent
+    answers like a coach rather than a brittle command parser."""
     raw = text.strip()
     lower = raw.lower()
 
@@ -91,25 +119,32 @@ def parse_intent(text: str) -> dict:
         return {"intent": "noop"}
     if lower in EXIT_PHRASES:
         return {"intent": "exit"}
-    if any(p in lower for p in STATUS_PHRASES):
-        return {"intent": "status"}
-    if any(p in lower for p in DIAGNOSE_PHRASES):
-        return {"intent": "diagnose"}
+    # Literal one-word/exact commands always work.
+    if lower in PLAN_EXACT:
+        return {"intent": "plan", "lift": None}
 
+    # Precise session log (weight x reps) — works even inside a sentence.
     log = _extract_log(raw)
     if log:
         return {"intent": "log", **log}
 
-    # PLAN intent: only fires for unambiguous "show today's session" phrasings.
-    # Multi-block / season / future queries — even when they contain "plan" —
-    # go to the LLM so it can call get_season_plan, propose_season, etc.
+    # Design / change / help requests reach the LLM regardless of any
+    # incidental command keyword.
+    if any(m in lower for m in _LLM_REQUEST_MARKERS):
+        return {"intent": "ask", "query": raw}
+
+    if _command_match(lower, STATUS_PHRASES):
+        return {"intent": "status"}
+    if _command_match(lower, DIAGNOSE_PHRASES):
+        return {"intent": "diagnose"}
+
+    # PLAN intent: only unambiguous "show today's session" phrasings. Multi-
+    # block / season / future queries — even containing "plan" — reach the LLM
+    # so it can call get_season_plan, propose_season, etc.
     if any(p in lower for p in PLAN_PHRASES):
         return {"intent": "plan", "lift": _extract_lift(lower)}
-    if lower in PLAN_EXACT:
-        return {"intent": "plan", "lift": None}
     if (lower.startswith("plan ") and
             not any(h in lower for h in PLAN_LLM_HINTS)):
-        # Bare "plan today" / "plan for this week" → render current.
         return {"intent": "plan", "lift": _extract_lift(lower)}
 
     return {"intent": "ask", "query": raw}
@@ -207,21 +242,61 @@ class Chat:
                      "transition into", "ending in peaking",
                      "culminating in your competition")
 
+    def _committed_plan_summary(self) -> str:
+        """A deterministic, factual day-by-day summary of the ACTUAL committed
+        block, read straight from state. Appended to the reply after a commit
+        so what the agent SAYS always matches what's actually in the program
+        (the LLM's prose can drift — claim exercises the plan doesn't contain)."""
+        block = self.agent.state.get("block", {}) or {}
+        if not block.get("type"):
+            return ""
+        days = (block.get("weekly_plan") or {}).get("days", [])
+        if not days:
+            return ""
+        out = [f"\n\n- Committed program: {block.get('label', block['type'])}"
+               f" (starts {block.get('started_at', '?')}, "
+               f"{block.get('duration_weeks', '?')} wks). What's actually in it:"]
+        for d in days:
+            label = d.get("label", "Day")
+            exs = d.get("exercises") or []
+            if not exs:
+                out.append(f"    {label}: rest")
+                continue
+            mains = [e.get("name") for e in exs
+                     if e.get("role") in ("primary", "secondary")]
+            accs = [e.get("name") for e in exs if e.get("role") == "accessory"]
+            bits = []
+            if mains:
+                bits.append("; ".join(mains))
+            if accs:
+                bits.append("accessories: " + ", ".join(accs))
+            out.append(f"    {label}: " + " | ".join(bits))
+        return "\n".join(out)
+
     def _with_commit_check(self, out: dict) -> str:
-        """Catch the case where the LLM claims to have committed a block
-        but propose_block was never actually called (or failed). Appends
-        a visible note so the user isn't misled."""
+        """Ground a commit reply in reality. If propose_block actually
+        committed this turn, append the factual program summary (so the
+        reply matches state). If the LLM only CLAIMED a commit without
+        calling propose_block — or it was rejected — surface a warning."""
         text = out.get("text", "")
         steps = out.get("steps", [])
         lower = text.lower()
+        propose_calls = [s for s in steps if s[0] == "propose_block"]
+        committed = [s for s in propose_calls
+                     if isinstance(s[2], dict) and "committed" in s[2]]
+        # A block was actually committed this turn → show the real program.
+        if committed:
+            return self._with_season_check(out, base_text=text) \
+                + self._committed_plan_summary()
+
         claims_commit = any(v in lower for v in self._COMMIT_VERBS)
         if not claims_commit:
             return self._with_season_check(out)
-        propose_calls = [s for s in steps if s[0] == "propose_block"]
         if not propose_calls:
             return (text + "\n\n⚠️ The agent said it committed a block but "
-                    "didn't actually call propose_block this turn. Re-ask "
-                    "with: 'Commit that as a block now.'")
+                    "didn't actually call propose_block this turn — the "
+                    "program was NOT changed. Re-ask with: 'Commit that as a "
+                    "block now.'")
         errors = [s for s in propose_calls
                   if isinstance(s[2], dict) and "error" in s[2]]
         if errors and self.agent.state["block"].get("type") is None:

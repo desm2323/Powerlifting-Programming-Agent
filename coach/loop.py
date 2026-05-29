@@ -47,6 +47,29 @@ def _calendar_sort_days(days: list[dict]) -> list[dict]:
     return [day for _, day in sorted(enumerate(days), key=key)]
 
 
+def _fill_rest_days(days: list[dict]) -> list[dict]:
+    """Build a full Monday→Sunday week: training days at their weekday, every
+    other weekday filled with a rest marker. Any existing rest entries are
+    dropped and regenerated, so rest days always appear in the right slot
+    regardless of whether the proposed plan included them.
+
+    Falls back to a plain calendar sort if any training day's label doesn't
+    name a weekday (can't place it on the calendar)."""
+    training = [d for d in days
+                if (d.get("exercises") or []) and not guardrails._is_rest_day(d)]
+    by_weekday: dict[int, dict] = {}
+    for d in training:
+        wd = guardrails._weekday_index(d.get("label", ""))
+        if wd is None:
+            return _calendar_sort_days(days)
+        by_weekday[wd] = d
+    week: list[dict] = []
+    for i, name in enumerate(_WEEKDAY_NAMES):
+        week.append(by_weekday[i] if i in by_weekday
+                    else {"label": f"{name.capitalize()} — Rest", "exercises": []})
+    return week
+
+
 def _compute_start_date(weekly_plan: dict, today: date,
                         earliest: date | None = None) -> date:
     """Block starts on the next occurrence of the first day's weekday,
@@ -164,6 +187,11 @@ class Agent:
             and s.get("block_week") == active.get("week")
             for s in self.state.get("sessions", [])
         )
+        # An active block the lifter hasn't trained yet (zero logged sessions)
+        # is being EDITED, not replaced by the next block in a stack. So
+        # "redesign my block" overwrites it IN PLACE: keep its start date and
+        # don't consume/advance the season sequence.
+        in_place = bool(active.get("type")) and not has_sessions
         if active.get("type") and has_sessions and not replace_active:
             return {"error": (
                 f"REFUSED: there's already an active block "
@@ -191,7 +219,7 @@ class Agent:
         # macrocycle instead of silently skipping a planned block.
         sp = self.state.get("season_plan", {}) or {}
         upcoming = sp.get("blocks", []) if isinstance(sp, dict) else []
-        if upcoming and not override_season_plan:
+        if upcoming and not override_season_plan and not in_place:
             planned = upcoming[0]
             if planned.get("block_type") != block_type:
                 return {"error": (
@@ -235,8 +263,25 @@ class Agent:
         # (or asks the LLM to commit the next block hypothetically), the
         # new block still lands AFTER where the previous one would have
         # ended on the calendar, instead of doubling back to today.
-        start = _compute_start_date(plan, date.today(),
-                                    earliest=_earliest_start_from_history(self.state))
+        # In-place redesign keeps the original start date (snapped to the
+        # first day's weekday in case the plan's day order changed). Otherwise
+        # the block starts on or after the previous block's scheduled end
+        # (season stacking) or today.
+        if in_place and active.get("started_at"):
+            try:
+                anchor = date.fromisoformat(active["started_at"])
+            except (ValueError, TypeError):
+                anchor = date.today()
+            start = _compute_start_date(plan, anchor)
+        else:
+            start = _compute_start_date(
+                plan, date.today(),
+                earliest=_earliest_start_from_history(self.state))
+        # Fill rest days deterministically so the committed plan always shows a
+        # full Mon-Sun week. Done after the start date is computed so start
+        # timing is unaffected.
+        plan = dict(plan)
+        plan["days"] = _fill_rest_days(plan["days"])
         self.state["block"] = {
             "type": block_type,
             "label": meta["label"],
@@ -256,7 +301,7 @@ class Agent:
         # committed it's no longer "upcoming", so drop the matching head
         # entry. Popping here (rather than at archive time) keeps the
         # head correct even when consecutive blocks share a type.
-        if upcoming and not override_season_plan:
+        if upcoming and not override_season_plan and not in_place:
             if upcoming and upcoming[0].get("block_type") == block_type:
                 self.state["season_plan"]["blocks"] = upcoming[1:]
 
@@ -274,51 +319,60 @@ class Agent:
 
     def _default_weekly_plan(self, block_type: str,
                              focus_lifts: list[str]) -> dict:
-        """Fallback weekly plan if the LLM didn't supply one. Main lift +
-        2 generic accessories per day, no secondary days. The LLM should
-        ALWAYS supply its own plan — this exists so the engine doesn't
-        crash. Includes accessories so the plan passes the validator's
-        minimum-accessory rule."""
+        """Fallback weekly plan if the LLM didn't supply one. A balanced
+        4-day split (Sebastian): squat + bench trained 2x/week (heavy PRIMARY
+        day + lighter SECONDARY day), deadlift 1x, rest days filling the rest
+        of the week. The LLM should ALWAYS supply its own plan — this exists
+        so the engine never commits an empty/invalid block, and it models the
+        structure the validator now requires. intensity_pct here is only used
+        for exercise selection + validation; real loads come from the RPE
+        trajectory in compute_exercise_load."""
         meta = blocks.block_prescription(block_type)
         sets, reps = meta["sets"], meta["reps"]
         intensity, rpe_cap = meta["intensity_pct"], meta["rpe_cap"]
-        # Two generic accessories per main lift, picked from the same
-        # category guidance the prompt has. RPE-only (no %TM).
         accessory_picks = {
             "squat": ("Leg curl", "Hanging leg raise"),
             "bench": ("DB row", "Tricep pushdown"),
             "deadlift": ("Barbell row", "Back extension"),
         }
-        days = []
-        for lift in ("squat", "bench", "deadlift"):
-            # Top set + back-off: the engine drives the top set's RPE climb and
-            # holds/climbs the back-off per block type. intensity_pct here is
-            # only used for selection + validation; real loads come from the
-            # RPE trajectory in compute_exercise_load.
-            exercises = [{
-                "name": f"{lift.capitalize()} (top set)", "lift": lift,
-                "role": "primary", "sets": 1, "reps": reps,
-                "intensity_pct": intensity, "rpe_cap": rpe_cap,
-                "rationale": None,
-            }, {
-                "name": f"{lift.capitalize()} (back-offs)", "lift": lift,
-                "role": "primary", "sets": max(2, sets - 1), "reps": reps + 2,
-                "intensity_pct": max(0.55, intensity - 0.12),
-                "rpe_cap": max(5.0, rpe_cap - 1.5),
-                "rationale": None,
-            }]
-            for acc_name in accessory_picks[lift]:
-                exercises.append({
-                    "name": acc_name, "lift": lift,
-                    "role": "accessory", "sets": 3, "reps": 10,
-                    "intensity_pct": 0.0, "rpe_cap": 8,
-                    "rationale": "default accessory",
-                })
-            days.append({
-                "label": f"Day {len(days)+1} — {lift.capitalize()}",
-                "exercises": exercises,
-            })
-        return {"days": days}
+
+        def main(lift: str, role: str, lighter: bool = False) -> list[dict]:
+            inten = max(0.55, intensity - (0.10 if lighter else 0.0))
+            cap = max(5.0, rpe_cap - (1.0 if lighter else 0.0))
+            return [
+                {"name": f"{lift.capitalize()} (top set)", "lift": lift,
+                 "role": role, "sets": 1, "reps": reps,
+                 "intensity_pct": inten, "rpe_cap": cap, "rationale": None},
+                {"name": f"{lift.capitalize()} (back-offs)", "lift": lift,
+                 "role": role, "sets": max(2, sets - 1), "reps": reps + 2,
+                 "intensity_pct": max(0.55, inten - 0.10),
+                 "rpe_cap": max(5.0, cap - 1.0), "rationale": None},
+            ]
+
+        def acc(lift: str, n: int = 2) -> list[dict]:
+            return [{"name": name, "lift": lift, "role": "accessory",
+                     "sets": 3, "reps": 10, "intensity_pct": 0.0,
+                     "rpe_cap": 8, "rationale": "default accessory"}
+                    for name in accessory_picks[lift][:n]]
+
+        def rest(label: str) -> dict:
+            return {"label": label, "exercises": []}
+
+        return {"days": [
+            {"label": "Monday — Heavy Squat",
+             "exercises": main("squat", "primary") + acc("squat")},
+            {"label": "Tuesday — Heavy Bench",
+             "exercises": main("bench", "primary") + acc("bench")},
+            rest("Wednesday — Rest"),
+            {"label": "Thursday — Deadlift",
+             "exercises": main("deadlift", "primary") + acc("deadlift")},
+            {"label": "Friday — Secondary Squat & Bench",
+             "exercises": (main("squat", "secondary", lighter=True)
+                           + main("bench", "secondary", lighter=True)
+                           + acc("squat"))},
+            rest("Saturday — Rest"),
+            rest("Sunday — Rest"),
+        ]}
 
     def _compute_prescriptions(self, lifts: list[str] | None = None) -> None:
         """Write the current week's pending prescription for each main lift.
@@ -378,6 +432,23 @@ class Agent:
         b = self.state["block"]
         if not b.get("type"):
             return {"error": "no active block to archive"}
+        # Don't archive an untrained block. A block with no logged sessions
+        # isn't "completed" — recording it as done puts a false completion in
+        # history AND pushes the next block's start past this block's
+        # scheduled end. "Redesign / change my block" means edit it in place:
+        # the LLM should re-propose with replace_active=True, not archive.
+        trained = any(
+            s.get("block_type") == b.get("type")
+            and s.get("block_week") == b.get("week")
+            for s in self.state.get("sessions", [])
+        )
+        if not b.get("in_deload") and not trained:
+            return {"error": (
+                "REFUSED: this block has no logged sessions, so it is NOT "
+                "completed. To CHANGE or REDESIGN it, call propose_block with "
+                "replace_active=True — that replaces the untrained block in "
+                "place and keeps its start date. Only archive (review_current_"
+                "block) a block the lifter has actually trained.")}
         record = {
             "type": b["type"], "label": b["label"],
             "duration_weeks": b["duration_weeks"],

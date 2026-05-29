@@ -339,7 +339,7 @@ def test_guardrails_reject_stacked_primary_quality_variations():
              "role": "secondary", "sets": 4, "reps": 5,
              "intensity_pct": 0.65, "rpe_cap": 7},
             {"name": "Close-grip bench", "lift": "bench",
-             "role": "accessory", "sets": 3, "reps": 6,
+             "role": "secondary", "sets": 3, "reps": 6,
              "intensity_pct": 0.70, "rpe_cap": 7}]},
     ]}
     err = guardrails.validate_weekly_plan(plan)
@@ -509,16 +509,195 @@ def test_pq_variation_dedup_still_rejects_different_variations():
              "sets": 4, "reps": 5, "intensity_pct": 0.75, "rpe_cap": 8},
             *_generic_accessories("squat")]},
         {"label": "Thu — Secondary Bench", "exercises": [
-            # DIFFERENT variations — still rejected.
+            # DIFFERENT variations, both secondary — still rejected (Rule 5b).
             {"name": "Tempo bench", "lift": "bench", "role": "secondary",
              "sets": 4, "reps": 5, "intensity_pct": 0.65, "rpe_cap": 7},
             {"name": "Close-grip bench", "lift": "bench",
-             "role": "accessory", "sets": 3, "reps": 6,
+             "role": "secondary", "sets": 3, "reps": 6,
              "intensity_pct": 0.70, "rpe_cap": 7}]},
     ]}
     err = guardrails.validate_weekly_plan(plan)
     assert err is not None
     assert "different" in err.lower() or "tempo" in err.lower()
+
+
+def test_validator_rejects_barbell_variation_as_accessory():
+    """A loadable barbell comp-lift variation (paused/pin/deficit/etc.) tagged
+    role='accessory' is rejected — it's SECONDARY main-lift work, not
+    isolation. (The reported paused-deadlift-in-accessories bug.)"""
+    plan = {"days": [
+        {"label": "Mon — Squat", "exercises": [
+            {"name": "Squat", "lift": "squat", "role": "primary",
+             "sets": 4, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 8},
+            *_generic_accessories("squat")]},
+        {"label": "Thu — Deadlift", "exercises": [
+            {"name": "Deadlift", "lift": "deadlift", "role": "primary",
+             "sets": 3, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 8},
+            {"name": "Paused deadlift", "lift": "deadlift", "role": "accessory",
+             "sets": 3, "reps": 5, "intensity_pct": 0.65, "rpe_cap": 7},
+            *_generic_accessories("deadlift")]},
+    ]}
+    err = guardrails.validate_weekly_plan(plan)
+    assert err is not None
+    assert "accessory" in err.lower() and "secondary" in err.lower()
+
+
+def test_validator_requires_2x_frequency_in_multiday_strength():
+    """Volume/strength blocks with 3+ training days must train squat and
+    bench ~2x/week (Sebastian). A 3-day split with 1x each is rejected."""
+    plan = {"days": [
+        {"label": "Mon — Squat", "exercises": [
+            {"name": "Squat", "lift": "squat", "role": "primary",
+             "sets": 4, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 8},
+            *_generic_accessories("squat")]},
+        {"label": "Tue — Bench", "exercises": [
+            {"name": "Bench", "lift": "bench", "role": "primary",
+             "sets": 4, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 8},
+            *_generic_accessories("bench")]},
+        {"label": "Thu — Deadlift", "exercises": [
+            {"name": "Deadlift", "lift": "deadlift", "role": "primary",
+             "sets": 3, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 8},
+            *_generic_accessories("deadlift")]},
+    ]}
+    err = guardrails.validate_weekly_plan(plan, block_type="strength")
+    assert err is not None
+    assert "squat" in err.lower() and "2x" in err.lower()
+    # Technique blocks are exempt (lower frequency is fine).
+    assert guardrails.validate_weekly_plan(plan, block_type="technique") is None
+
+
+def test_default_weekly_plan_passes_validation_for_all_block_types():
+    """The fallback plan must itself satisfy the validator (incl. the 2x
+    frequency floor) for every block type — a 4-day split with rest days."""
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = _new_agent(os.path.join(tmp, "s.json"))
+        for bt in blocks.VALID_BLOCK_TYPES:
+            plan = agent._default_weekly_plan(bt, [])
+            assert guardrails.validate_weekly_plan(plan, block_type=bt) is None, bt
+
+
+def test_normalize_weakness_maps_synonyms():
+    """Free-text weaknesses resolve to catalog sticking-point keys."""
+    assert accessories.normalize_weakness("deadlift", "my deadlift lockout") == "lockout"
+    assert accessories.normalize_weakness("deadlift", "weak off the floor") == "off_the_floor"
+    assert accessories.normalize_weakness("deadlift", "grip gives out") == "grip"
+    assert accessories.normalize_weakness("squat", "no quads") == "weak_quads"
+    assert accessories.normalize_weakness("bench", "weak lockout") == "lockout"
+    assert accessories.normalize_weakness("squat", "gibberish xyz") is None
+
+
+def test_get_strength_variation_resolves_lockout_to_rack_pull():
+    """A deadlift-lockout weakness must resolve to concrete exercises
+    (rack pull / block pull), not an empty list."""
+    out = reasoning._tool_get_strength_variation("deadlift", "lockout")
+    names = [p["name"].lower() for p in out["picks"]]
+    assert out["resolved_sticking_point"] == "lockout"
+    assert any("rack pull" in n for n in names)
+    assert any("block pull" in n for n in names)
+
+
+def test_validator_rejects_same_lift_on_consecutive_days():
+    """A heavy compound on consecutive calendar days leaves no recovery."""
+    plan = {"days": [
+        {"label": "Monday — Heavy Squat", "exercises": [
+            {"name": "Squat", "lift": "squat", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            *_generic_accessories("squat")]},
+        {"label": "Tuesday — Squat again", "exercises": [
+            {"name": "Squat (light top)", "lift": "squat", "role": "secondary",
+             "sets": 1, "reps": 5, "intensity_pct": 0.65, "rpe_cap": 7},
+            {"name": "Squat (back-offs)", "lift": "squat", "role": "secondary",
+             "sets": 3, "reps": 6, "intensity_pct": 0.60, "rpe_cap": 6},
+            *_generic_accessories("squat")]},
+    ]}
+    err = guardrails.validate_weekly_plan(plan)
+    assert err is not None and "consecutive" in err.lower()
+
+
+def test_validator_allows_two_lifts_stacked_same_day():
+    """Stacking two DIFFERENT compounds on one day is allowed (fatigue
+    management) — Rule 8 only bars the SAME lift on consecutive days, and
+    same-day spacing of the squat's two sessions is fine."""
+    plan = {"days": [
+        {"label": "Monday — Squat + Bench", "exercises": [
+            {"name": "Squat", "lift": "squat", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            {"name": "Bench (tempo top)", "lift": "bench", "role": "secondary",
+             "sets": 1, "reps": 5, "intensity_pct": 0.65, "rpe_cap": 7},
+            {"name": "Bench (back-offs)", "lift": "bench", "role": "secondary",
+             "sets": 3, "reps": 6, "intensity_pct": 0.60, "rpe_cap": 6},
+            *_generic_accessories("squat")]},
+        {"label": "Thursday — Squat + Bench", "exercises": [
+            {"name": "Squat (light top)", "lift": "squat", "role": "secondary",
+             "sets": 1, "reps": 5, "intensity_pct": 0.65, "rpe_cap": 7},
+            {"name": "Squat (back-offs)", "lift": "squat", "role": "secondary",
+             "sets": 3, "reps": 6, "intensity_pct": 0.60, "rpe_cap": 6},
+            {"name": "Bench", "lift": "bench", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            *_generic_accessories("bench")]},
+    ]}
+    assert guardrails.validate_weekly_plan(plan, block_type="strength") is None
+
+
+def test_validator_rejects_single_lift_block_from_weakness_bias():
+    """A weakness must not collapse the program to one lift — a deadlift-only
+    'strength' block (squat + bench dropped) is rejected. This is the
+    over-biasing-toward-the-weakness case."""
+    plan = {"days": [
+        {"label": "Monday — Deadlift", "exercises": [
+            {"name": "Deficit deadlift", "lift": "deadlift", "role": "primary",
+             "sets": 3, "reps": 4, "intensity_pct": 0.80, "rpe_cap": 7},
+            *_generic_accessories("deadlift")]},
+        {"label": "Friday — Deadlift", "exercises": [
+            {"name": "Paused deadlift (top set)", "lift": "deadlift",
+             "role": "secondary", "sets": 1, "reps": 3,
+             "intensity_pct": 0.80, "rpe_cap": 8},
+            {"name": "Paused deadlift (back-offs)", "lift": "deadlift",
+             "role": "secondary", "sets": 4, "reps": 5,
+             "intensity_pct": 0.65, "rpe_cap": 6},
+            *_generic_accessories("deadlift")]},
+    ]}
+    err = guardrails.validate_weekly_plan(plan, block_type="strength")
+    assert err is not None
+    assert "only trains deadlift" in err.lower()
+
+
+def test_validator_rejects_duplicate_weekday():
+    """Two day-entries on the same weekday (a Monday training day AND a
+    Monday rest) is impossible in a 7-day week — rejected."""
+    plan = {"days": [
+        {"label": "Monday — Heavy Squat", "exercises": [
+            {"name": "Squat", "lift": "squat", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            *_generic_accessories("squat")]},
+        {"label": "Monday — Rest", "exercises": []},
+        {"label": "Wednesday — Bench", "exercises": [
+            {"name": "Bench", "lift": "bench", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            *_generic_accessories("bench")]},
+    ]}
+    err = guardrails.validate_weekly_plan(plan)
+    assert err is not None and "monday" in err.lower()
+
+
+def test_validator_rejects_same_lift_sunday_monday_wrap():
+    """The week repeats: a Sunday session + a Monday session of the same lift
+    is back-to-back across the wrap — rejected."""
+    plan = {"days": [
+        {"label": "Sunday — Secondary Squat", "exercises": [
+            {"name": "Paused squat (top)", "lift": "squat", "role": "secondary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.70, "rpe_cap": 7},
+            {"name": "Paused squat (back-offs)", "lift": "squat",
+             "role": "secondary", "sets": 3, "reps": 6,
+             "intensity_pct": 0.60, "rpe_cap": 6},
+            *_generic_accessories("squat")]},
+        {"label": "Monday — Heavy Squat", "exercises": [
+            {"name": "Squat", "lift": "squat", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            *_generic_accessories("squat")]},
+    ]}
+    err = guardrails.validate_weekly_plan(plan)
+    assert err is not None and "consecutive" in err.lower()
 
 
 def test_validator_rejects_db_bench_as_primary():
@@ -662,7 +841,9 @@ def test_commit_block_sorts_days_by_calendar_order():
             {"label": "Wednesday — Rest", "exercises": []},
             {"label": "Sunday — Rest", "exercises": []},
         ]}
-        agent.commit_block("strength", 4, "test", [], weekly_plan=plan)
+        # technique block: exempt from the 2x/wk frequency floor, so this
+        # single-session-per-lift layout is valid — we're testing day SORTING.
+        agent.commit_block("technique", 4, "test", [], weekly_plan=plan)
         stored_labels = [d["label"]
                          for d in agent.state["block"]["weekly_plan"]["days"]]
         # Wednesday should now be between Tuesday and Thursday.
@@ -822,20 +1003,24 @@ def test_blocks_top_set_climbs_to_heavy_finish():
     assert dl["rpe_cap"] <= 7.5
 
 
-def test_blocks_backoff_static_in_strength_climbs_in_volume():
-    """Back-off behaviour is block-type-dependent (the tri-source rule):
-    in a STRENGTH block the back-off is held static while the top set drives
-    (Ben); in a VOLUME block the back-off itself climbs week to week
-    (Sebastian: add load weekly; Bromley: float the weight up)."""
+def test_backoff_climbs_but_slower_than_top_set():
+    """Back-offs are a fraction of the climbing top set: they ramp up across
+    the block (start light, increase) but the TOP SET climbs faster — it's
+    the strength driver, back-offs are maintenance/volume. We don't model
+    e1RM, so a fixed fraction reproduces Ben's 'static %' intent simply."""
+    top = {"name": "Squat (top set)", "lift": "squat", "role": "primary",
+           "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9.0}
     backoff = {"name": "Squat (back-offs)", "lift": "squat", "role": "primary",
                "sets": 4, "reps": 5, "intensity_pct": 0.68, "rpe_cap": 7.0}
-    s1 = blocks.compute_exercise_load(backoff, 150, "strength", 1, duration_weeks=4)
-    s4 = blocks.compute_exercise_load(backoff, 150, "strength", 4, duration_weeks=4)
-    assert s4["top_weight"] == s1["top_weight"]   # strength back-off: static
-
-    v1 = blocks.compute_exercise_load(backoff, 150, "volume", 1, duration_weeks=4)
-    v4 = blocks.compute_exercise_load(backoff, 150, "volume", 4, duration_weeks=4)
-    assert v4["top_weight"] > v1["top_weight"]    # volume back-off: climbs
+    t1 = blocks.compute_exercise_load(top, 150, "strength", 1, duration_weeks=4)
+    t4 = blocks.compute_exercise_load(top, 150, "strength", 4, duration_weeks=4)
+    b1 = blocks.compute_exercise_load(backoff, 150, "strength", 1, duration_weeks=4)
+    b4 = blocks.compute_exercise_load(backoff, 150, "strength", 4, duration_weeks=4)
+    assert b4["top_weight"] >= b1["top_weight"]            # back-off climbs
+    # ...but the top set climbs FASTER (and stays heavier throughout).
+    assert (t4["top_weight"] - t1["top_weight"]) > (b4["top_weight"] - b1["top_weight"])
+    assert b1["top_weight"] < t1["top_weight"]
+    assert b4["top_weight"] < t4["top_weight"]
 
 
 def test_blocks_rpe_waves_across_block():
@@ -896,16 +1081,15 @@ def test_secondary_with_zero_intensity_also_falls_back():
     assert out["top_weight"] is not None
 
 
-def test_primary_with_normal_intensity_unchanged():
-    """Sanity: the safety net only fires when intensity_pct is impossibly
-    low. Normal values (0.55-0.94) pass through untouched."""
-    primary = {"name": "Squat", "lift": "squat", "role": "primary",
-               "sets": 4, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9.0}
-    out = blocks.compute_exercise_load(primary, 150, "strength", 2)
-    # Should NOT be the block default — should reflect 0.85 × wave.
-    # Strength wave week 2 intensity_mult = 0.98 → 0.833 → 125 kg-ish.
+def test_main_lift_backoff_gets_real_sensible_load():
+    """A multi-set main-lift entry (a back-off) always gets a real load — a
+    fraction of that week's top set — never None and never the top-set weight."""
+    backoff = {"name": "Squat (back-offs)", "lift": "squat", "role": "primary",
+               "sets": 4, "reps": 5, "intensity_pct": 0.85, "rpe_cap": 9.0}
+    out = blocks.compute_exercise_load(backoff, 150, "strength", 2, duration_weeks=4)
+    # Strength wk2 top set ~125kg; back-off = 0.78x ~= 97.5kg.
     assert out["top_weight"] is not None
-    assert 120 <= out["top_weight"] <= 130
+    assert 85 <= out["top_weight"] <= 110
 
 
 def test_accessory_with_zero_intensity_stays_rpe_only():
@@ -982,6 +1166,8 @@ def test_commit_block_after_archive_uses_previous_block_expected_end():
         # Force the volume block to have started June 1, 2026 (hypothetical)
         agent.state["block"]["started_at"] = "2026-06-01"
         agent.state["block"]["duration_weeks"] = 4
+        # Block reached its deload -> a real completion the engine will archive.
+        agent.state["block"]["in_deload"] = True
         agent.archive_current_block("done well")
         # Now commit a strength block. Today is whatever the test runs on;
         # what we care about is: started_at >= July 6 (volume's exp. end).
@@ -1395,12 +1581,42 @@ def test_commit_block_stores_weekly_plan_verbatim():
         assert stored["days"][0]["exercises"][1]["rationale"] == "grip overload"
 
 
+def test_redesign_untrained_block_replaces_in_place():
+    """'Redesign my block' before training it = an in-place edit: the new
+    block keeps the original start date and the old (untrained) block is NOT
+    archived as a false completion (the reported July-06 / 'completed' bug)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        agent = _new_agent(path, with_block=True)  # volume block, untrained
+        orig_start = agent.state["block"]["started_at"]
+        out = agent.commit_block("strength", 4, "switch to strength", ["deadlift"])
+        assert "committed" in out
+        assert agent.state["block"]["type"] == "strength"
+        # Start date preserved — NOT pushed past the old block's scheduled end.
+        assert agent.state["block"]["started_at"] == orig_start
+        # The untrained block was replaced in place, not recorded as completed.
+        assert agent.state["block_history"] == []
+
+
+def test_archive_refuses_untrained_block():
+    """Archiving a block with no logged sessions is refused — it isn't a
+    completion. The LLM is told to re-propose in place instead."""
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        agent = _new_agent(path, with_block=True)  # untrained
+        out = agent.archive_current_block("done")
+        assert "error" in out
+        assert agent.state["block"]["type"] == "volume"  # still active
+        assert agent.state["block_history"] == []
+
+
 def test_archive_current_block_moves_to_history():
     """When a block completes, archive_current_block pushes it to history
     and clears the active block (forcing the next propose_block)."""
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path, with_block=True)
+        agent.state["block"]["in_deload"] = True  # block completed its deload
         agent.archive_current_block("completed cleanly")
         assert agent.state["block"]["type"] is None
         assert len(agent.state["block_history"]) == 1
@@ -1604,15 +1820,18 @@ def test_react_propose_block_via_tool_commits_state():
                  *_generic_accessories("deadlift"),
              ]},
         ]}
+        # technique block: exempt from the 2x/wk frequency floor, so this
+        # single-session-per-lift layout is valid — we're testing the tool's
+        # state round-trip, not block frequency.
         out = reasoning.dispatch_tool(
             agent.state, "propose_block",
-            {"block_type": "strength", "duration_weeks": 4,
-             "rationale": "ready for higher intensities", "focus_lifts": [],
+            {"block_type": "technique", "duration_weeks": 4,
+             "rationale": "groove technique at moderate loads", "focus_lifts": [],
              "weekly_plan": plan},
             agent=agent,
         )
         assert "committed" in out
-        assert agent.state["block"]["type"] == "strength"
+        assert agent.state["block"]["type"] == "technique"
         # Plan must round-trip into state.
         assert len(agent.state["block"]["weekly_plan"]["days"]) == 3
         # Primary lift's prescription auto-populated (Squat is primary on day 1)
@@ -1650,6 +1869,7 @@ def test_react_review_current_block_archives():
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path, with_block=True)
+        agent.state["block"]["in_deload"] = True  # block completed its deload
         out = reasoning.dispatch_tool(
             agent.state, "review_current_block",
             {"outcome": "went well, bench moved up"}, agent=agent,
@@ -1693,6 +1913,71 @@ def test_chat_parses_status_intent():
 def test_chat_routes_unknown_to_ask():
     out = parse_intent("is it normal for my hips to shoot up on heavy squats?")
     assert out["intent"] == "ask"
+
+
+def test_chat_redesign_request_with_weakness_keyword_goes_to_ask():
+    """A conversational redesign request that mentions 'weakness' must reach
+    the LLM, NOT the canned diagnose command (the buried-keyword bug)."""
+    out = parse_intent(
+        "redesign my block, i also have a weakness with my lockout for deadlifts")
+    assert out["intent"] == "ask", f"routed to {out}"
+
+
+def test_chat_modify_requests_route_to_llm():
+    """Design / change / help requests are conversational -> LLM, even when a
+    command keyword is buried inside them."""
+    for msg in (
+        "can you change my bench day",
+        "create a new strength block for me",
+        "fix my squat, it's my biggest weakness",
+        "i want to adjust my current plan",
+        "swap my deadlift variation please",
+    ):
+        assert parse_intent(msg)["intent"] == "ask", f"{msg!r} not routed to ask"
+
+
+def test_chat_short_commands_still_short_circuit():
+    """Brief / lead-with-keyword commands still hit the cheap engine path
+    (no LLM call): they must not regress into 'ask'."""
+    assert parse_intent("diagnose")["intent"] == "diagnose"
+    assert parse_intent("what are my weaknesses")["intent"] == "diagnose"
+    assert parse_intent("status")["intent"] == "status"
+    assert parse_intent("where am i in the block?")["intent"] == "status"
+
+
+def test_chat_reply_grounded_in_committed_program():
+    """After a real commit, the reply appends the ACTUAL committed program
+    so the agent's words match state — even if the LLM's prose drifts."""
+    from coach.chat import Chat
+    with tempfile.TemporaryDirectory() as tmp:
+        chat = Chat(os.path.join(tmp, "s.json"))
+        chat.agent.init_program("Sam", {"squat": 150, "bench": 100,
+                                         "deadlift": 190}, experience="intermediate")
+        chat.agent.commit_block("strength", 4, "build strength", ["squat"])
+        # LLM prose claims exercises the plan doesn't contain.
+        out = {"text": "I committed a block with rack pulls and deficit deadlifts!",
+               "steps": [("propose_block", {}, {"committed": chat.agent.state["block"]})]}
+        reply = chat._with_commit_check(out)
+        assert "Committed program" in reply
+        assert "Monday — Heavy Squat" in reply  # the real day labels appear
+        assert "Deadlift (top set)" in reply
+        # The committed plan has no rack pulls, so the grounded summary won't
+        # invent them — the truth is shown alongside the (wrong) prose.
+        assert "Rack pull" not in reply
+
+
+def test_chat_flags_hallucinated_commit_without_propose():
+    """If the LLM claims a commit but never called propose_block, warn that
+    the program was NOT changed."""
+    from coach.chat import Chat
+    with tempfile.TemporaryDirectory() as tmp:
+        chat = Chat(os.path.join(tmp, "s.json"))
+        chat.agent.init_program("Sam", {"squat": 150, "bench": 100,
+                                         "deadlift": 190}, experience="intermediate")
+        out = {"text": "I've committed your new block with rack pulls.",
+               "steps": []}
+        reply = chat._with_commit_check(out)
+        assert "NOT changed" in reply or "didn't actually call propose_block" in reply
 
 
 def test_chat_exit():
@@ -2481,6 +2766,7 @@ def test_archive_stores_weekly_plan_in_history():
                 *_generic_accessories("bench")]},
         ]}
         agent.commit_block("volume", 4, "test", [], weekly_plan=plan)
+        agent.state["block"]["in_deload"] = True  # block completed its deload
         agent.archive_current_block("solid block, all lifts up")
         record = agent.state["block_history"][-1]
         assert "weekly_plan" in record

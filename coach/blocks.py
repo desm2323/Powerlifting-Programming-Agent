@@ -103,24 +103,17 @@ TOP_SET_TRAJECTORY = {
     "peaking":   {"reps": 1, "rpe": 9.0, "rep_step": 0, "rpe_step": 0.5, "min_rpe": 7.5, "max_reps": 2},
 }
 
-# BACKOFF_BEHAVIOUR — whether the back-off / work sets PROGRESS week to week is
-# block-type-dependent, per the tri-source KB:
-#   volume:    CLIMB. The volume work is the driver — Sebastian progresses a
-#              hypertrophy phase by adding load week to week (10x10@100 -> 105
-#              -> 110, xZ2QTewSMuk); Bromley floats accessory load up within a
-#              rep range (czEsWD56hCU).
-#   technique: gentle climb at light loads (short, strict block).
-#   strength:  STATIC. The top set drives progression; back-offs are held at a
-#              fast-bar-speed submaximal load (Ben: back-off load static across
-#              the block, zrOWMftnvQw @ 9:55).
-#   peaking:   STATIC + minimal. Volume is cut, intensity held; back-down work
-#              only maintains the pattern (Sebastian peaking, xZ2QTewSMuk @
-#              41:45; Ben: never to failure on the mains).
-BACKOFF_BEHAVIOUR = {
-    "volume":    {"climbs": True,  "rpe": 8.0, "rpe_step": 0.5, "min_rpe": 6.0},
-    "technique": {"climbs": True,  "rpe": 7.0, "rpe_step": 0.5, "min_rpe": 5.5},
-    "strength":  {"climbs": False, "rpe": 6.5, "rpe_step": 0.0, "min_rpe": 6.5},
-    "peaking":   {"climbs": False, "rpe": 6.5, "rpe_step": 0.0, "min_rpe": 6.5},
+# BACKOFF_RATIO — the back-off load is a fixed fraction of THAT WEEK'S TOP-SET
+# weight. So back-offs are ALWAYS lighter than the top set and climb WITH it
+# but more slowly (the top set is the strength driver; back-offs are
+# maintenance in a strength block / volume work in a volume block — they must
+# never out-pace the top set). Ben's "back-off load static across the block"
+# means static PERCENTAGES on a rising e1RM; we don't model e1RM, so a fixed
+# fraction of the (climbing) top set reproduces the same intent simply.
+# Volume back-offs sit relatively heaviest (more volume work); peaking lightest
+# (volume is cut going into a meet).
+BACKOFF_RATIO = {
+    "volume": 0.85, "technique": 0.82, "strength": 0.78, "peaking": 0.75,
 }
 
 WEEK_LABELS = {
@@ -170,20 +163,31 @@ def top_set_for_week(block_type: str, week: int,
     return int(reps), round(rpe, 1)
 
 
-def backoff_rpe_for_week(block_type: str, week: int,
-                         duration_weeks: int | None = None,
-                         readiness: float = 1.0) -> float:
-    """Target RPE for back-off / work sets on week N. Climbs across the block
-    for volume/technique (the volume work is the driver), static for
-    strength/peaking (the top set drives, back-offs are held)."""
-    b = BACKOFF_BEHAVIOUR[block_type]
-    if b["climbs"]:
-        n = _productive_weeks(block_type, duration_weeks)
-        weeks_from_end = max(0, n - max(1, min(week, n)))
-        base_rpe = max(b["min_rpe"], b["rpe"] - b["rpe_step"] * weeks_from_end)
-    else:
-        base_rpe = b["rpe"]
-    return max(5.0, round(base_rpe - _readiness_shave(readiness), 1))
+def backoff_load_for_week(block_type: str, week: int,
+                          anchor_1rm: float | None,
+                          duration_weeks: int | None = None,
+                          readiness: float = 1.0) -> float | None:
+    """Back-off WEIGHT for week N: a fixed fraction of that week's top-set
+    weight, so it is always lighter than the top set and climbs more slowly.
+    Returns None when there's no anchor."""
+    if not anchor_1rm:
+        return None
+    reps, rpe = top_set_for_week(block_type, week, duration_weeks, readiness)
+    top_weight = loading.load_for_rpe(anchor_1rm, reps, rpe)
+    return loading.round_to_increment(top_weight * BACKOFF_RATIO[block_type])
+
+
+def _implied_rpe(anchor_1rm: float | None, weight: float | None,
+                 reps: int) -> float:
+    """Approximate the RPE that `weight` x `reps` represents against the
+    anchor (the inverse of load_for_rpe). Back-offs come out low — fast bar
+    speed with reps in reserve, exactly Ben's back-off intent. Clamped to a
+    sane display range."""
+    if not anchor_1rm or not weight or weight <= 0:
+        return 6.0
+    reps_to_failure = 30 * (anchor_1rm / weight - 1)
+    rir = reps_to_failure - reps
+    return max(5.0, min(8.5, round((10 - rir) * 2) / 2))
 
 
 def compute_exercise_load(exercise: dict, training_max: float | None,
@@ -243,13 +247,19 @@ def compute_exercise_load(exercise: dict, training_max: float | None,
     # A single-set primary/secondary entry is the heavy TOP SET; multi-set
     # entries are the back-off / volume work.
     if exercise.get("sets", 1) <= 1:
+        # TOP SET: the heavy driver — RPE-anchored, climbs to the block's peak.
         reps, rpe = top_set_for_week(block_type, week, duration_weeks, readiness)
         sets = 1
+        weight = loading.load_for_rpe(training_max, reps, rpe) if training_max else None
     else:
+        # BACK-OFF: a fraction of that week's top set — always lighter than the
+        # top set, and climbs with it but more slowly. RPE shown is implied
+        # from the load (comes out low: fast bar speed, reps in reserve).
         reps = max(1, exercise.get("reps", 5))
-        rpe = backoff_rpe_for_week(block_type, week, duration_weeks, readiness)
         sets = exercise.get("sets", 4)
-    weight = loading.load_for_rpe(training_max, reps, rpe) if training_max else None
+        weight = backoff_load_for_week(block_type, week, training_max,
+                                       duration_weeks, readiness)
+        rpe = _implied_rpe(training_max, weight, reps)
     intensity_pct = round(weight / training_max, 3) if (weight and training_max) else 0.0
     return {"sets": sets, "reps": reps, "intensity_pct": intensity_pct,
             "rpe_cap": round(rpe, 1), "top_weight": weight, "week_label": label}

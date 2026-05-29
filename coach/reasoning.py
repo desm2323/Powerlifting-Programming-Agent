@@ -623,13 +623,20 @@ def _tool_get_rpe_usage_principles() -> dict:
 
 
 def _tool_get_strength_variation(lift: str, weakness: str) -> dict:
-    """Weak-point variations for use as role='secondary' or to REPLACE the
-    primary on a secondary day. Example weaknesses:
-      squat -> 'depth' / 'load_reduction'
-      bench -> 'bar_path' / 'chest_tightness'
-      deadlift -> 'start_position' / 'fatigue_management'."""
-    picks = expert_knowledge.recommend_strength_variation(lift, weakness)
-    return {"lift": lift, "weakness": weakness, "picks": picks}
+    """Weak-point fixes for a stated weakness. Draws from BOTH the cited Ben
+    strength-variation set (depth / bar_path / start_position / ...) AND the
+    sticking-point catalog (lockout / off_the_floor / off_the_chest /
+    out_of_the_hole + muscle weaknesses like weak_quads / grip / lower_back),
+    resolving free text like 'deadlift lockout' or 'grip gives out' to the
+    right entries. Barbell variations (rack pull, deficit, pin/board press)
+    go in as role='secondary' or the back-off on the lift's day; isolation
+    fixes (leg press, face pull, carries) go in as role='accessory'."""
+    picks = list(expert_knowledge.recommend_strength_variation(lift, weakness))
+    sticking_point = accessories.normalize_weakness(lift, weakness)
+    if sticking_point:
+        picks += accessories.list_for(lift, sticking_point, training_max=None)
+    return {"lift": lift, "weakness": weakness,
+            "resolved_sticking_point": sticking_point, "picks": picks}
 
 
 TOOL_SCHEMAS = [
@@ -718,38 +725,84 @@ TOOL_SCHEMAS = [
          "CALL ONLY WHEN:\n"
          "  (a) the lifter has NO active block (onboarding, or block just "
          "      archived), OR\n"
-         "  (b) the lifter explicitly asks to ABANDON their current block "
-         "      mid-cycle and switch to a new one — in which case you MUST "
-         "      call review_current_block first to archive the old one.\n\n"
+         "  (b) the lifter asks to CHANGE / REDESIGN / ADJUST their current "
+         "      block — pass replace_active=True. This REPLACES the current "
+         "      block IN PLACE, keeping its start date. Do NOT call "
+         "      review_current_block for this: the block isn't finished, it's "
+         "      being edited. Archiving an untrained block records a false "
+         "      completion and pushes the start date wrong.\n"
+         "  (c) the lifter has FINISHED TRAINING a block and is moving on — "
+         "      THEN call review_current_block first (archive the trained "
+         "      block), then propose_block for the next one.\n\n"
          "DO NOT CALL WHEN:\n"
          "  - The lifter says 'show me the next block', 'what's coming "
          "    up', 'preview the strength block', 'what would block 2 look "
          "    like' → use get_season_plan instead, then describe upcoming "
          "    blocks from its 'upcoming_blocks' field in your text reply.\n"
          "  - You want to demonstrate a hypothetical → describe it in prose.\n\n"
-         "If you call propose_block while a block is active, the engine "
-         "will REFUSE with an error reminding you to archive first or use "
-         "get_season_plan. Read that error and correct course — do not "
-         "retry the same call.\n\n"
+         "While a block is active: if the lifter has logged sessions on it, "
+         "the engine REFUSES unless you pass replace_active=True; if it's "
+         "untrained, propose_block replaces it in place (keeping its start "
+         "date). Do NOT archive an untrained block — the engine rejects that "
+         "too. Read any error and correct course — do not retry the same "
+         "call.\n\n"
          "You MUST provide weekly_plan — a list of training days, each "
          "with a primary main lift + supplementary work + accessories. The "
          "agent applies a per-week wave (intensity & volume change "
          "week-to-week) on top of what you specify; you only define ONE "
          "week's template.\n\n"
-         "Day-structure rules (powerlifting):\n"
-         "- Squat: 1-2 sessions/wk (one primary HEAVY, optional secondary "
-         "LIGHTER/technique-focused at 65-75%)\n"
-         "- Bench: 2-3 sessions/wk safely; 4/wk only for advanced. Use a mix "
-         "of intensity (primary heavy) and volume (secondary higher rep)\n"
-         "- Deadlift: 1-2 sessions/wk MAX — pulls are most fatiguing. "
-         "1 primary heavy + at most 1 lighter/variation day.\n"
-         "- Never put heavy deadlift the day after heavy squat (compound "
-         "spinal fatigue).\n"
-         "- Accessories belong on the same day as the main lift they "
-         "support (e.g. close-grip bench on bench day, paused squat on "
-         "squat day).\n\n"
-         "Each exercise needs sets/reps/intensity_pct/rpe_cap. Loads will be "
-         "computed from the lifter's TM × intensity_pct — never specify kg."),
+         "Day-structure rules (powerlifting — Sebastian x_uhGTQGrAg):\n"
+         "- FREQUENCY: default to 2x/week per main lift = one HEAVY PRIMARY "
+         "day + one LIGHTER SECONDARY day. So a normal volume/strength block "
+         "has SECONDARY DAYS, not just one session per lift. Squat 2x, bench "
+         "2x, deadlift 1x (max 2 — pulls are the most fatiguing). This is the "
+         "4-day split Sebastian prefers. The engine REJECTS a volume/strength "
+         "block with 3+ days that trains squat or bench only 1x.\n"
+         "- SECONDARY day = lighter top set + back-off of the lift, OR a "
+         "barbell VARIATION (paused / pin / tempo / close-grip / deficit / "
+         "block pull). Two role='secondary' entries (top set + back-off), "
+         "same variation name.\n"
+         "- WEAK POINTS: when the lifter names a weakness, you MUST call "
+         "get_strength_variation(lift, weakness) and put a NAMED pick from it "
+         "INTO the plan — never just say 'added accessory volume'. Barbell "
+         "variations (rack pull, block pull, deficit, pin/board press, paused) "
+         "go in as SECONDARY work (own day) or the back-off on the lift's "
+         "primary day; isolation fixes (leg press, face pull, carries) go in "
+         "as accessories. Name the exercise in your reply. E.g. deadlift "
+         "lockout -> rack pull / block pull (secondary); off-the-floor -> "
+         "deficit deadlift; grip -> farmer's carry.\n"
+         "  KEEP THE PROGRAM BALANCED: a weakness ADDS focused work to a "
+         "full program — it does NOT replace it. Still train squat, bench AND "
+         "deadlift (Sebastian: prioritise one quality, MAINTAIN the others — "
+         "the man who chases two rabbits eats neither). Give the weak lift "
+         "just ONE extra exposure (an added secondary/tertiary day, or the "
+         "back-off on its primary day); do NOT turn a 'strength program' into "
+         "a single-lift deadlift program. The engine rejects a volume/strength "
+         "block missing any of the three lifts.\n"
+         "  ACT, DON'T ASK: when the lifter names a weakness (or says 'yes' to "
+         "your suggestion) and a block is ALREADY active, COMMIT the revised "
+         "block now — call propose_block with replace_active=True, carrying "
+         "over the existing days and ADDING the weak-point work. Do NOT just "
+         "list options and ask 'want me to add these?', and do NOT re-ask "
+         "their training goal (they already told you). Only describe options "
+         "without committing if they explicitly asked to compare first.\n"
+         "- ROLES: primary = heaviest expression that day; secondary = "
+         "lighter/variation BARBELL main work on its OWN day; accessory = "
+         "ISOLATION / DB / cable / machine / row / arms ONLY. A barbell comp-"
+         "lift variation tagged accessory is REJECTED by the engine.\n"
+         "- Never put heavy deadlift the day after heavy squat (spinal "
+         "fatigue). The week REPEATS, so mind the Sunday→Monday wrap: a "
+         "Sunday session followed by a Monday session of the same lift is "
+         "back-to-back (the engine rejects it). Avoid clustering 4+ training "
+         "days in a row.\n"
+         "- REST DAYS: lay out the FULL week with off days as rest markers — "
+         "label 'Wednesday — Rest' / 'Sunday — Rest', exercises: []. CRITICAL: "
+         "each weekday (Mon-Sun) appears AT MOST ONCE across ALL day-entries "
+         "(training + rest) — never two 'Monday' entries — and emit no more "
+         "than 7 day-entries total. The engine rejects duplicate weekdays.\n\n"
+         "Each exercise needs sets/reps/intensity_pct/rpe_cap as a STARTING "
+         "point; the engine computes the actual loads (RPE-anchored) — never "
+         "specify kg."),
      "input_schema": {
         "type": "object",
         "properties": {
@@ -775,7 +828,9 @@ TOOL_SCHEMAS = [
                             "type": "object",
                             "properties": {
                                 "label": {"type": "string",
-                                    "description": "e.g. 'Day 1 — Heavy Squat'"},
+                                    "description": "Name the WEEKDAY so rest "
+                                    "days + recovery spacing render correctly, "
+                                    "e.g. 'Monday — Heavy Squat', 'Wednesday — Rest'"},
                                 "exercises": {
                                     "type": "array",
                                     "items": {
@@ -1447,10 +1502,16 @@ COACH_SYSTEM = (
     "  and propose corrections with reasoning. The lifter wants coaching, "
     "  not stenography — they already know what they're doing now.\n"
     "  BAD PATTERNS TO CATCH (rewrite, don't replicate):\n"
-    "    - Heavy SQUAT + heavy DEADLIFT on the same day → CNS overload. "
-    "Split onto different days.\n"
-    "    - Back-to-back heavy days for the same lift (e.g. Mon heavy SQ → "
-    "Tue heavy SQ) → no recovery. Space by 48-72h.\n"
+    "    - Two HEAVY spinal lifts the same day (heavy squat + heavy "
+    "deadlift) is too much. BUT stacking two compounds on one day with ONE "
+    "heavy + the OTHER lighter is a smart fatigue-saver: Sebastian's "
+    "Lilybridge stacks heavy squat + LIGHT deadlift on one day (alternating "
+    "heavy/light weekly) to keep heavy spinal loading to a single day; heavy "
+    "squat + a tempo/secondary bench same day is also fine. Use it to save "
+    "days when frequency is tight.\n"
+    "    - Back-to-back days for the SAME lift (e.g. Mon squat → Tue squat) → "
+    "no recovery; the engine REJECTS it. Space a lift's sessions 48-72h "
+    "apart.\n"
     "    - More than 2 deadlift sessions in a week, or two heavy DL days → "
     "too fatiguing. Drop or lighten one.\n"
     "    - Primary AND secondary of the same lift on the same day → "
@@ -1680,7 +1741,18 @@ COACH_SYSTEM = (
     "once.\n"
     "- Avoid calling list_block_types if the lifter has already implied "
     "the block type. Don't redundantly call get_block_status if you've "
-    "already seen its output this turn.\n\n"
+    "already seen its output this turn.\n"
+    "- READ-ONLY KB TOOLS (get_prescription_pattern, get_volume_landmark, "
+    "get_volume_targets, get_neglected_muscle_targets, get_hypertrophy_"
+    "checklist, lookup_accessories): call each AT MOST ONCE, and usually NOT "
+    "AT ALL — the day-structure + RPE rules in this prompt already encode "
+    "them. Build the plan directly. Calling get_strength_variation once for a "
+    "stated weakness is the main exception. Every call re-sends this whole "
+    "prompt, so they add up fast.\n"
+    "- IF propose_block IS REJECTED, the error lists EVERY problem at once. "
+    "Fix them ALL in your NEXT single propose_block — do NOT resubmit fixing "
+    "one issue at a time (that burns your tool-call budget and re-sends the "
+    "prompt each round).\n\n"
 
     "TOP SET + BACKOFF — EVERY PRIMARY/SECONDARY MAIN-LIFT DAY HAS BOTH:\n"
     "  You lay out the STRUCTURE; the ENGINE owns the weekly load (it is "

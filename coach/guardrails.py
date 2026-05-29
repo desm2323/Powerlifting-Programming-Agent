@@ -54,6 +54,20 @@ MAX_SESSIONS_PER_WEEK = {"squat": 3, "bench": 4, "deadlift": 2}
 REST_DAY_TOKENS = ("rest", "recovery", "off day", "active recovery", "deload day")
 
 
+_WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday",
+             "saturday", "sunday")
+
+
+def _weekday_index(label: str) -> int | None:
+    """Weekday index (Mon=0 .. Sun=6) named in a day label, or None if the
+    label doesn't name a weekday (e.g. 'Day 1 — Squat')."""
+    low = (label or "").lower()
+    for i, name in enumerate(_WEEKDAYS):
+        if name in low:
+            return i
+    return None
+
+
 def _is_rest_day(day: dict) -> bool:
     """A day is a rest day if its label names rest/recovery AND it has no
     exercises. A day labelled 'Active recovery — light walk + foam roll'
@@ -116,23 +130,51 @@ def validate_weekly_plan(plan: dict,
                 "don't count). Add more training days or remove rest days.")
 
     main_lift_session_counts = {"squat": 0, "bench": 0, "deadlift": 0}
+    # Weekday index each lift is trained on (for the consecutive-day check).
+    lift_weekdays: dict[str, list[int | None]] = {
+        "squat": [], "bench": [], "deadlift": []}
+    # Collect ALL violations so the LLM fixes them in ONE retry, not one per
+    # round-trip (each retry re-sends the whole prompt — expensive).
+    errors: list[str] = []
+
+    # Reject duplicate weekday labels: two day-entries on the SAME weekday
+    # (e.g. a 'Monday — Heavy Squat' training day AND a 'Monday — Rest') is
+    # impossible in a 7-day week and scrambles the calendar + rest layout.
+    seen_weekday: dict[int, str] = {}
+    for d in days:
+        if not isinstance(d, dict):
+            continue
+        wd = _weekday_index(d.get("label", ""))
+        if wd is None:
+            continue
+        if wd in seen_weekday:
+            errors.append(
+                f"Two days are both on {_WEEKDAYS[wd].capitalize()} "
+                f"('{seen_weekday[wd]}' and '{d.get('label', '?')}'). Each "
+                f"weekday may appear only ONCE — give every training day AND "
+                f"rest day a DISTINCT weekday (Mon-Sun), and don't emit more "
+                f"than 7 day-entries total.")
+        else:
+            seen_weekday[wd] = d.get("label", "?")
 
     for i, day in enumerate(days):
         exercises = day.get("exercises") if isinstance(day, dict) else None
         if not isinstance(exercises, list):
-            return (f"Day {i+1} '{day.get('label', '?')}' has malformed "
-                    f"'exercises' field — must be a list.")
+            errors.append(f"Day {i+1} '{day.get('label', '?')}' has malformed "
+                          f"'exercises' field — must be a list.")
+            continue
         if not exercises:
             # Rest days are allowed (label like 'Wednesday — Rest') and skip
             # all per-day checks below. Empty exercises with a non-rest label
             # is treated as an LLM mistake.
             if _is_rest_day(day):
                 continue
-            return (f"Day {i+1} '{day.get('label', '?')}' has no exercises. "
-                    f"Either add at least one exercise, OR label it as a "
-                    f"rest day (e.g. 'Wednesday — Rest' / 'Sunday — Active "
-                    f"Recovery') with exercises=[] — the validator will then "
-                    f"accept it as a rest marker.")
+            errors.append(f"Day {i+1} '{day.get('label', '?')}' has no "
+                          f"exercises. Either add at least one exercise, OR "
+                          f"label it a rest day (e.g. 'Wednesday — Rest') with "
+                          f"exercises=[] — the validator accepts that as a "
+                          f"rest marker.")
+            continue
 
         # Rule 0: no exercise from the AVOID list (planks, ab wheel,
         # push-ups, BW squats/lunges, conditioning movements). These
@@ -141,7 +183,7 @@ def validate_weekly_plan(plan: dict,
         for ex in exercises:
             name = ex.get("name", "")
             if name and is_avoided(name):
-                return (f"Day {i+1} '{day.get('label', '?')}' contains "
+                errors.append(f"Day {i+1} '{day.get('label', '?')}' contains "
                         f"'{name}', which is on the AVOID list (doesn't "
                         f"progress with load / is conditioning / is "
                         f"trained better by the main lift). Replace it "
@@ -161,7 +203,7 @@ def validate_weekly_plan(plan: dict,
                 same_day_main_lifts.add(lift)
         for lift, roles in roles_for_lift.items():
             if "primary" in roles and "secondary" in roles:
-                return (f"Day {i+1} '{day.get('label', '?')}' has BOTH primary "
+                errors.append(f"Day {i+1} '{day.get('label', '?')}' has BOTH primary "
                         f"AND secondary {lift} in the same session — too "
                         f"fatiguing. To fix this, EITHER move the secondary "
                         f"{lift} to a different day (this is usually what "
@@ -174,8 +216,10 @@ def validate_weekly_plan(plan: dict,
         # Count one session per main lift that appears as primary or secondary
         # on this day (multiple exercises for the same lift on the same day
         # still count as ONE session for frequency).
+        day_weekday = _weekday_index(day.get("label", ""))
         for lift in same_day_main_lifts:
             main_lift_session_counts[lift] += 1
+            lift_weekdays[lift].append(day_weekday)
 
         # Rule 5a: RPE-only-named exercises (DB / cable / machine /
         # weighted pull-up / lateral raise / etc.) can't be tagged
@@ -186,7 +230,7 @@ def validate_weekly_plan(plan: dict,
             role = ex.get("role")
             name = ex.get("name", "")
             if role in ("primary", "secondary") and is_rpe_only_accessory(name):
-                return (f"Day {i+1} '{day.get('label', '?')}' has "
+                errors.append(f"Day {i+1} '{day.get('label', '?')}' has "
                         f"'{name}' as role='{role}', but DB / cable / "
                         f"machine / lighter-accessory movements can't "
                         f"be primary or secondary — those slots are for "
@@ -195,6 +239,28 @@ def validate_weekly_plan(plan: dict,
                         f"deficit / etc.). Re-tag '{name}' as "
                         f"role='accessory' OR replace it with a barbell "
                         f"variation if you wanted secondary work.")
+
+        # Rule 5d: a loadable BARBELL variation of a comp lift (paused /
+        # pin / deficit / tempo / close-grip / block pull) is SECONDARY
+        # main-lift work — Sebastian's top-set + variation model accumulates
+        # pattern volume through it (tjC6ilWMEMM @ 18:16). Tagging it
+        # role='accessory' buries real main-lift work among isolation; a
+        # weak-point variation especially belongs on the lift's day as a
+        # back-off, or on a dedicated secondary day.
+        for ex in exercises:
+            if ex.get("role") == "accessory":
+                m = _match_primary_quality_variation(ex.get("name", ""))
+                if m is not None:
+                    patt = m[0].replace("_pattern", "")
+                    errors.append(f"Day {i+1} '{day.get('label', '?')}' has "
+                            f"'{ex.get('name')}' as role='accessory', but it's "
+                            f"a barbell {patt} VARIATION — that's SECONDARY "
+                            f"main-lift work, NOT an accessory. Put it as the "
+                            f"back-off on the {patt}'s primary day (role="
+                            f"'primary', a 2nd entry for that lift), or on a "
+                            f"separate SECONDARY day (role='secondary', top set "
+                            f"+ back-off). Accessories are isolation / DB / "
+                            f"cable / machine / row / arms only.")
 
         # Rule 5b: no two DISTINCT primary-quality variations of the
         # same pattern on the same day (tempo bench + close-grip bench
@@ -220,7 +286,7 @@ def validate_weekly_plan(plan: dict,
                     if tok not in seen:
                         names.append(name)
                         seen.add(tok)
-                return (f"Day {i+1} '{day.get('label', '?')}' has "
+                errors.append(f"Day {i+1} '{day.get('label', '?')}' has "
                         f"{len(distinct_tokens)} DIFFERENT primary-"
                         f"quality variations of the same pattern "
                         f"({pattern.replace('_', ' ')}): {names}. These "
@@ -247,7 +313,7 @@ def validate_weekly_plan(plan: dict,
         if (block_type or "").lower() != "technique":
             for lift, count in secondary_counts_per_lift.items():
                 if count < 2:
-                    return (f"Day {i+1} '{day.get('label', '?')}' has "
+                    errors.append(f"Day {i+1} '{day.get('label', '?')}' has "
                             f"only {count} role='secondary' entry for "
                             f"{lift}. Secondary days default to TOP "
                             f"SET + BACK-OFF (same two-entry pattern "
@@ -271,7 +337,7 @@ def validate_weekly_plan(plan: dict,
                               if ex.get("role") == "accessory")
         min_accessories = 1 if (block_type or "").lower() == "peaking" else 2
         if accessory_count < min_accessories:
-            return (f"Day {i+1} '{day.get('label', '?')}' has "
+            errors.append(f"Day {i+1} '{day.get('label', '?')}' has "
                     f"{accessory_count} accessory exercises "
                     f"(role='accessory') — need at least "
                     f"{min_accessories}. Per Bromley's session "
@@ -287,10 +353,83 @@ def validate_weekly_plan(plan: dict,
     for lift, count in main_lift_session_counts.items():
         cap = MAX_SESSIONS_PER_WEEK[lift]
         if count > cap:
-            return (f"{count} {lift} sessions/week exceeds the recovery cap "
-                    f"of {cap}. Drop one or move it to an accessory role.")
+            errors.append(f"{count} {lift} sessions/week exceeds the recovery "
+                    f"cap of {cap}. Drop one or move it to an accessory role.")
 
-    return None
+    # Rule 7: frequency floor. Sebastian (x_uhGTQGrAg): 2x/week per body
+    # part is optimal — one HEAVY primary day + one LIGHTER/variation
+    # secondary day. For a volume/strength block with 3+ training days,
+    # squat and bench must each be trained at least twice (this is what
+    # creates secondary days). Deadlift is exempt — it's the most fatiguing
+    # lift, 1x/week is correct. Technique/peaking blocks are exempt (lower
+    # frequency / max specificity). 2-day blocks are exempt (a deliberate
+    # low-frequency whole-body choice).
+    bt = (block_type or "").lower()
+    if bt in ("volume", "strength") and training_day_count >= 3:
+        for lift in ("squat", "bench"):
+            if main_lift_session_counts[lift] < 2:
+                errors.append(f"{lift} is trained only "
+                        f"{main_lift_session_counts[lift]}x this week, but a "
+                        f"{bt} block with {training_day_count} training days "
+                        f"should hit squat and bench ~2x/week (Sebastian: 2x "
+                        f"per body part is optimal). Add a SECONDARY {lift} "
+                        f"day — a lighter top set + back-off, or a barbell "
+                        f"variation (paused / tempo / close-grip). Deadlift "
+                        f"may stay 1x (most fatiguing). This is what creates "
+                        f"the primary + secondary day structure.")
+
+    # Rule 8: a heavy compound needs recovery — the SAME main lift must not
+    # land on CONSECUTIVE calendar days (Mon squat + Tue squat leaves no
+    # recovery; space heavy work 48-72h, or stack the lift's second session
+    # later in the week). Skipped when day labels don't name weekdays — the
+    # engine can't tell the calendar order then.
+    for lift, wds in lift_weekdays.items():
+        if len(wds) < 2 or any(w is None for w in wds):
+            continue
+        ordered = sorted(set(wds))
+        pair = next(((a, b) for a, b in zip(ordered, ordered[1:])
+                     if b - a == 1), None)
+        # The week repeats, so Sunday (6) then Monday (0) is also back-to-back.
+        if pair is None and 0 in ordered and 6 in ordered:
+            pair = (6, 0)
+        if pair:
+            a, b = pair
+            errors.append(f"{lift} is scheduled on consecutive days "
+                    f"({_WEEKDAYS[a].capitalize()} + "
+                    f"{_WEEKDAYS[b].capitalize()}) — a heavy compound "
+                    f"needs 48-72h between sessions. Move one {lift} day "
+                    f"so its two sessions aren't back-to-back (mind the "
+                    f"Sunday→Monday wrap — the week repeats).")
+
+    # Rule 9: a strength/volume block must not collapse into a SINGLE-lift
+    # program. Addressing a weakness ADDS focused work (an extra secondary /
+    # back-off / accessory for the weak lift) to a balanced program — it must
+    # not drop the rest of the lifts (Sebastian: prioritise one quality,
+    # MAINTAIN the others). At least 2 of the 3 competition lifts must be
+    # trained. Peaking/technique are exempt (may specialise).
+    if bt in ("volume", "strength"):
+        trained_lifts = [lift for lift in ("squat", "bench", "deadlift")
+                         if main_lift_session_counts[lift] > 0]
+        if len(trained_lifts) < 2:
+            only = trained_lifts[0] if trained_lifts else "nothing"
+            errors.append(f"This {bt} block only trains {only}. A weakness is "
+                    f"addressed by ADDING focused work (an extra secondary / "
+                    f"back-off / accessory for the weak lift) to a BALANCED "
+                    f"program — not by dropping the other lifts. Keep training "
+                    f"squat, bench and deadlift; give the weak point one extra "
+                    f"focused exposure (e.g. a secondary/tertiary day or the "
+                    f"back-off on its primary day).")
+
+    if not errors:
+        return None
+    if len(errors) == 1:
+        return errors[0]
+    # Multiple problems → report them ALL so the LLM fixes everything in its
+    # NEXT propose_block (one call), instead of one-at-a-time retries that
+    # burn the tool-call budget and re-send the whole prompt each round.
+    return ("The plan has several issues — FIX ALL of them in your NEXT "
+            "propose_block (a single call; do not fix them one at a time):\n"
+            + "\n".join(f"  {n}. {e}" for n, e in enumerate(errors, 1)))
 
 
 def scope_check(notes: str) -> dict:
