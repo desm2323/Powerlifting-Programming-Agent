@@ -8,67 +8,555 @@
 #   2:14  General development is THE primary purpose (most overlooked)
 #   2:42  Novices should widen the base — variety, not specialization
 #   3:33  Bodybuilding-style accessory builds size + supports strength
-#   3:44  Individual variation — muscle storage differs by build (his
-#         shoulders grew from pressing, arms didn't)
-#   5:02  General development → more efficient, tighter positions
 #   5:27  Targeted development only appropriate for mid-intermediates+
-#   5:55  Most lifters just need general dev + basic variations
 #   6:43  BRIAN CARROLL'S FRAMEWORK: mechanically similar movements
-#   7:02  Examples: pause squat, close grip bench
-#   8:09  Good morning = compound accessory, less mechanically similar
-#         (still hits hip extension but neurologically different)
 #   8:17  Dips = fantastic upper body builder, indirect carryover
 #   9:30  ADVANTAGED movements: better leverage, shorter ROM, more weight
 #         per unit effort. CNS / force production / strength training.
-#   9:55  Examples: board press, partials
-#  10:13  Trap bar — weight closer to hips → shorter "leverage arm" →
-#         can lift more
-#  10:25  Banded work: overloads the top → trains nervous system to
-#         liberate motor units faster
-#  10:50  PEAKING ADVANTAGE: heavy walkouts before meet = old-school CNS
-#         prep that carries to contest day
-#  11:40  DISADVANTAGED movements: longer ROM, more time under tension,
-#         worse leverage, lower load
-#  12:04  Disadvantaged is like being a newbie — high effort but
-#         inefficient → low systemic stress despite hard work
-#  12:30  LOUIS SIMMONS / WESTSIDE: maxed every week because variations
-#         were novel + disadvantaged enough to limit fatigue
-#  13:51  Disadvantaged great for HYPERTROPHY — ROM + TUT = Weider
-#         principles (size development)
-#  14:20  BLOCK-PHASE MAPPING:
-#           Base/Volume phase → disadvantaged + variety + isolation
-#           Peak phase       → advantaged + heavier specific patterns
-#  14:48  Front squats heavy = hypertrophy, but NOT great near a comp
-#         (too different from comp squat to carry over directly)
-#  15:35  DECISION FRAMEWORK: ask "do I need mass or force production?"
-#  16:55  FOCUS TARGETING (weakness fixes) — only for intermediates+
-#  17:41  Example: LeRoy Walker — 700lb bench miss at 3/4 lockout (poor
-#         lockout strength despite explosive off the chest)
-#  19:50  Peak phase = heavier work, more specific advantaged patterns
-#  20:24  Compound accessories don't impact main-lift recovery — less
-#         mechanically similar = less specific fatigue
-#  22:46  Lighter accessories (machines / cables / DBs / isolation):
-#         easy to recover from, can train at high frequency (2-3x/wk)
-#  23:33  Drop high-volume accessory work going into peak prep — easy
-#         way to eliminate extra stress
+#  10:25  Banded work: overloads the top → trains nervous system
+#  10:50  PEAKING ADVANTAGE: heavy walkouts before meet = CNS prep
+#  11:40  DISADVANTAGED movements: longer ROM, more TUT, worse leverage
+#  12:04  Disadvantaged is like being a newbie — high effort but inefficient
+#  12:30  LOUIS SIMMONS / WESTSIDE: maxed weekly via novel disadvantaged work
+#  13:51  Disadvantaged great for HYPERTROPHY — ROM + TUT (Weider principles)
+#  14:20  BLOCK-PHASE MAPPING: base/volume → disadvantaged + variety +
+#         isolation; peak → advantaged + heavier specific patterns
+#  20:24  Compound accessories don't impact main-lift recovery as much
+#  22:46  Lighter accessories (machines/cables/DBs): easy recovery, high freq
+#  23:33  Drop high-volume accessory work going into peak prep
 #  24:40  WEAKNESS TARGETING: pattern vs muscle (two valid approaches)
-#  25:50  PATTERN TARGETING: train at the sticking point (pin presses,
-#         dead-stop work, pause at failure spot)
+#  25:50  PATTERN TARGETING: train at the sticking point
 #  27:18  MUSCLE TARGETING: reverse-engineer which muscle failed first
-#         (lockout = triceps usually, or shoulder stability)
-#  28:23  EXAMPLE BASE PHASE bench day:
-#           Bench 5×5+, Close-grip bench, Weighted dips 4×10-12,
-#           DB bench, French press, Cable pushdown
-#  33:00  HIGH-REP WAKE-UP for dormant muscles (15-20 reps, light load,
-#         deep burn) — teaches motor recruitment
-#  33:48  Kickbacks with pink 5-lb DBs × 30 reps in steep forward bend
-#  35:35  EXAMPLE PEAK PHASE bench day:
-#           Bench top triple + back-off, Pin bench + close grip,
-#           JM press, Band pushdowns (blood flow, tendon work)
-#  36:32  JM press = great heavy tricep exercise, transfers to comp
-#  38:32  Order in session: track precisely on top, chase stress on
-#         lighter accessories
+#  33:00  HIGH-REP WAKE-UP for dormant muscles (15-20 reps, deep burn)
+#  35:35  EXAMPLE PEAK PHASE bench day: Bench top triple + back-off, pin
+#         bench + close grip, JM press, band pushdowns
+#  38:32  Order in session: track precisely on top, chase stress on lighter
+#
+# --- FULL TRANSCRIPT ---
+# The timestamp anchors above remain the citation references used in
+# expert_knowledge.py; the body below is the complete spoken transcript.
 
-[Timestamps above are the citation anchors referenced in
- expert_knowledge.py. Re-run scripts/ingest_ben_videos.py to regenerate
- the full timestamped transcript body.]
+we're covering accessory selection exercise selection is a huge part of your
+program you can fiddle around all you want with set and rep schemes or different
+splits or arrangements of progression and that's important and it's all well and
+good but it is not the end all be all in fact exercise selection i would argue
+especially early on is probably the most important decision you can make there
+are certain exercises that are just known for providing immense carryover as
+long as you do them consistently and as long as you train them hard and that
+takes a lot of guesswork out it gives you a ton of wiggle room and that's always
+good when we're trying to balance all of these variables to get a specific
+desired result so we're going to talk about how to implement these variations
+for continued growth and which specific things that we're going to focus on when
+we are trying to select those because there's certain criteria that needs to be
+met and it all depends on you where you're at what you've done previously there
+are all these individual factors we need to get into so let's get into it the
+purpose of our accessory movements are to complement the main movement so just
+about everybody is going to be following some type of program where there is a
+main movement and these are either the competitive movements that have to be
+practiced or they are the movements that we deem the most beneficial
+developmentally and for so 95 percent of people so many people squatting
+benching deadlift pressing rowing those are the big ones and they get duplicated
+sometimes kind of well sometimes pretty poorly in dumbbell variations machine
+variation specialty bars and so on so usually things will hinge around the main
+movement all the practice we need with that and then the extra work we do is done
+to supplement that work because the idea is that the development we get from
+doing those movements it might be good but it won't be good forever and it could
+be better if we can get good at targeting weak areas and figuring out how to
+round ourselves out because we have to be more efficient so general development
+that's the big one that's the primary reason why you should always be doing some
+type of variation why very few people i would argue no people really should be
+just doing the main lifts if you have the option to incorporate some accessories
+in some way although there are some programs that work but they're not going to
+work indefinitely and they tend to work best for people that are already the
+cream of the crop and you can take that a step further if we're going to go on a
+little aside here what should we do with new lifters because things that just
+focus on a few barbell lifts seemed to work pretty damn well so i could see
+people in the audience saying what the hell are you talking about starting
+strength is wonderful grayscale lp is wonderful these programs that are very
+simplistic and only use barbell movements because they're so good they are good
+but new people when they have the option whether it's in a sport or lifting or
+anything else should widen their base out that means variety so the idea is that
+specific hyper-specific ways of training are best suited to those who are the
+most specialized in the world and not so much for everybody else and it's also in
+a novice's best interest to learn how to juggle variety so that's my rant on that
+general development however you want you want to get it whatever your method of
+pursuit is is the most important thing and accessories can increase size and
+strength in more places it can pack on meat in ways that just the main lifts
+won't interesting aside the way that your body is going to store muscle is going
+to be different from person a person assuming that you're all doing the same lift
+everybody who benches will find different weak points it depends on their build
+their their leverage is where their tendons insert all of these things so that's
+a really important point um i myself from pressing got huge shoulders i mean i
+don't know how big they are right now but they're not a lot to write home about
+but that was entirely from pressing my arms you can't really see you know i wish
+i was like israel israel i don't know i've been corrected before but i wish i uh
+you know had the swollness i wish i had the girth in my arms to prop them up on
+the desk so you know i could i could really commence i got to use the
+foreshortening from the camera to really command some respect like yeah yeah i
+know what the i'm talking about but my arms did not grow for from doing basic
+pressing and rowing movements i still got strong i still put meat on my body they
+still pack a lot of punch most bang for your buck and i will stand by that but
+there was more i could have been doing and should have been doing and weaknesses
+would have been prevented and i would have been more efficient earlier on if i
+did more accessory more variants of the main movements so general development is
+going to make you more efficient because the more well-rounded you are the
+tighter you can keep position the different more different positions you can work
+into and get a good result it's like being a good athlete you can play a lot of
+different sports while being well-rounded in physical development and having a
+well-rounded physique is going to allow you to do a lot of different movements and
+it will help you in always targeted development is another aspect of accessory
+and it's what most people probably think about and that's just reinforcing
+underdeveloped areas that's also important but most of you not all but most of
+you aren't necessarily in that camp where you should be hyper fixating on your
+weaknesses if you have glaring weaknesses from being new or from having a hyper
+focus program that gets fixed with general development with just incorporating
+the things you should have been doing anyways just a few basic variations and
+some basic isolation stuff that has to be rotated through anyways you have no
+business rigging up elaborate um elaborate exercise with bands specialty bars
+working at different heights constantly screwing around with your grip or stance
+most of you just need a few basic variations and a good kind of solid
+bodybuilding base to most of your training but that is a point of accessory so
+the different types they fall into the type that most of you probably think of
+and by the way i'm not going to like split hairs on language i understand that we
+could talk about accessory supplemental work variations if you have different
+lingo for like isolation movements or smaller bodybuilding movements i don't care
+i'm talking about anything that isn't the main lift that is supposed to pump up
+your main lift that's all i really care about mechanically similar movements i
+got this from brian carroll's book actually which i can't think of a better way
+to describe what most people think of accessory work that is a movement that
+looks more like your main lift than it does it because there's a spectrum here
+it's not going to be very binary there's some qualitative analysis that has to be
+done but we're talking about slight changes to the main movement so like a pause
+squat it's pretty much a squat but there's a variation that makes it a little
+harder one particular point and that's a value close grip benching you know
+changing your grip a little bit doesn't entirely change the movement now if we go
+one step further we can do something very similar to the movement that has
+obvious direct carry over to it but looks a lot different so it's not something
+that you might be doing say two weeks before a big meet because it's not that
+specific generally helpful but not that specific so compound accessories good
+mornings here deadlift good mornings are a fantastic exercise for building up hip
+extension they are not as good or at least not as directly related to dead
+lifting ability and there might be people who have leaned on good mornings their
+entire life they think you know my deadlift lives or dies with my good morning
+that's fine but the point is mechanically it's not as similar neurological action
+is not as similar if you are a very very very dialed in deadlifter then no good
+mornings would not be your go-to uh dips are another good one fantastic upper
+body builder you can use it to build pecs shoulders triceps whatever you like
+excellent movement will make your bench press bigger uh or your pressing ability
+greater in very broad terms not mechanically quite the same uh unilateral work's
+a good example split squats right there are a lot of different squat variations
+but a split squat works all the same muscles just not the same way but that all
+has value and then lighter accessories i say lighter it doesn't have to be light
+but generally things that force you into a very weak position or things that are
+more supported or things that basically require changes where you can't quite
+work load the same so you're talking about machines dumbbells cables small
+movements like isolation this is where we get surgical and pickup movements and
+we'll get into that too because part of targeting weak areas is either looking at
+the movement pattern and training the pattern or looking at the muscle that is
+lagging if you can reverse engineer from what you know about where you fail and
+say oh that must be this muscle and then isolation work might be warranted so
+those are two different approaches and they're both effective if you know kind of
+how and when and that does take some trial and error so mechanically similar
+movements i break them down into some distinct categories advantaged and
+disadvantaged advantaged movements of mechanically similar movement variations
+are ones where you are in a better leveraged position where range of motion might
+be a bit shorter things that generally lend itself to more weight moved for the
+same unit of effort overload movements are typically what you might think of as
+an advantage movement and this of course is advantage relative to your normal
+setup because your normal setup if you're a powerlifting nerd is already going to
+be as advantage as possible but this is taking it one step further so you know
+board presses shorten the range of motion you can potentially work up to a ton on
+board presses you can just port press so much if you train it most of you can't
+board press that much over your bench because you don't board press a lot so
+partials do have a role to play especially at key times trap bar is another good
+example not only do they tend to be a higher up so short range of motion even if
+you use the low handles it's closer to your center of mass so the bar isn't in
+front of you anymore getting in the way your damn shins so you're stronger there
+it's more advantage because the weight's closer to your hips banded work is
+another good example you can really overload the top so it's advantaged in that
+way so it's great for overload you know training the nervous system to handle
+more weight to liberate more motor units at once and do so quicker and that's
+great for strength and power development so this comes into peaking right if
+you're preparing for a big meet old school guys realize that if they did really
+heavy walkouts a couple weeks or is like the last phase before a meet that it
+would help them on contest day so general cns work has direct uh peaking
+advantage and this work is generally going to be heavy for that reason but it can
+also be used to target certain weaknesses if you're weak at specific spots
+sometimes getting into these advantage exercises are going to help you up that's
+more to uh that has more to do with how similar it is to the patterning you need
+around that spot you tend to be weak at and we'll cover that as well
+disadvantaged movements you're talking about a much longer range of motion more
+time under tension worse leverage uh the fact your disadvantage will require
+weight to be lower and there's a neat thing that goes on there because effort can
+be high but because the load is lighter even if you're straining the fact is
+you're not very efficient this is very akin to being a newbie because that's why
+novices can train repeatedly at high intensities and not fall apart it's because
+they are not trained enough to reach that upper limit in order to create this
+huge systemic stress so basically training is like taking the governor off your
+car a little bit more each time until all of a sudden you're capable of putting
+the engine under immense amount of stress so that's very very similar to what
+goes on in disadvantaged variations again you can also use it to work weaknesses
+if you can connect it to a certain pattern where you're deficient or if you can
+connect it to a particular muscle that has to work harder in this disadvantaged
+position to adapt and that's going to carry over so there is a bit of critical
+thinking there but in terms of programming you can understand that a unit of hard
+effort with a disadvantage variation doesn't quite burn you out even though it
+seems like it'd be counterintuitive it's not going to wreck you the way it would
+with your competition set up and that's ways to sneak in work that uh that is
+going to be specific to what you're doing without wrecking your recovery so that
+can be very very useful in fact and i know i've talked in the past but brilliant
+move by louis simmons with west side that's exactly why the system works the way
+it does is because they didn't want to have to deload they wanted to be able to
+max out every single week in the most specific thing they could train which in
+his mind was a one rep max if you're a power lifter and the way you do that and
+recover is by making subtle changes so you're inefficient now they usually use
+more overloaded movements but the fact that they're novel is kind of what does
+that so disadvantaged movements very much the same so that's an important tidbit
+if you're trying to really break open and analyze recovery in your program now
+these are great for hypertrophy again range of motion time under tension that's
+back to like the weeder principles so great for size development especially if
+it's more than what you're used to getting in your training so general
+development works very well generally used for more volume because those are kind
+of volume components you can think of one rep having more work within it so
+that's a way i like to think about it and for that reason disadvantaged movements
+work really really well at the beginning when you're in volume or hypertrophy
+phases when you're trying to add slabs of muscle onto you and round out those
+exposed weak areas where advantage movements because they go so well with the
+peak anyways with all that neurological action they go a lot better more towards
+the end and there might be a time and place to jumble that up depending but
+that's a general rule that's that's pretty easy to uh to abide by so you might be
+thinking further out when i'm in a base phase i'm hypertrophy more variation get
+uncomfortable reinforce these weak areas you might be thinking things that force
+you into an awkward position that might be where front squats are heavy whereas
+front squats don't get heavy enough to really provide a lot of carry over to your
+squat so right before a contest might not be the best way to go similar for
+something like a stiff leg deadlift fantastic developer for the posterior chain
+again you don't quite get as heavy and the positioning is just different enough
+that it's going to lose very very specific carryover that you want to drill
+closer to a meat so that goes that way of thinking it goes very well with this
+way that we think about training and preparing for a competition so for the
+immediate uh sorry for deciding exercise selection this what happens when i have
+a template to read off of i just i'm like ron bergen yeah just read through the
+teleprompter that man will read anything immediate gold decides exercise
+selection so what you need to do right now is asked do i need mass or force
+production now i know we can deconstruct all of this because any amount of
+training in some sense is going to increase force production any amount of
+training in some sense is going to increase mass that's also a useful thing to
+know but we're talking about specialization which is kind of what the point of
+working these different phases is it doesn't have to be hyper hyper-specialized
+but you do need some lead some bias one way or the other that's part of a
+long-term training strategy not from this week to next week we're not from this
+month to next month but over a longer period of time at least and this is going
+to be important in every periodized program you ever run so general development
+like we keep talking about again it's so important for so many of you guys and so
+many of you just forget about it put it on the back burner it is the quickest way
+for novices to get stronger disadvantage variations are great it's not the only
+thing but they're great peeking out strength advantage slash overlook overloaded
+movements tend to be great focus targeting so trying to target a particular
+weakness which i would say is only appropriate for kind of mid intermediates and
+up if you're to the point where you're thinking you're competitive in a
+powerlifting meet where you think you can go into a strong memory and do well
+you're probably an intermediate and that means that you are now advanced enough
+to start really kind of picking apart where you're deficient whereas the rest of
+you it's mostly general stuff but focus targeting where you're looking at
+weaknesses and saying how do i improve this you're gonna go with the closest
+movement pattern if it lines up where you can select one or the other based on
+how it lines up with your um with your phase whether you're in a volume
+hypertrophy accumulation whatever base phase or whether you're in a peak phase a
+heavier more specialized phase that's all the better but it doesn't necessarily
+have to be that way so if you are for instance focus on your inability to lock
+weight out when it's more than three quarters up in a bench press there's no way
+around it that's lockout strength that's top end that's where you're weak and i
+know people like this leroy walker trained at my gym a handful of times but it's
+three or four years ago back in the day no no it might have been longer he was
+still benching back then might be talking about a solid five or six years ago
+either way leroy very big guy very strong i watched him get three quarters of the
+way up with a 700 pound bench and miss all right he bent with a close grip he
+liked to get all that compression in his elbows and shoulders at the bottom blow
+it up off his chest with all kinds of speed sick really sick speed for handling
+700 pounds in hand um he just had this abysmal lockout strength and it was
+probably a byproduct of working into his strength for so many years he was fast
+at the bottom you can think of deadlifters who are the same disgustingly fast off
+the bottom for whatever reason but everything over 70 looks like molasses and
+that's from working at your weaknesses and letting this either positioning or
+muscular problem persist so to fix that you either like i said focus on the
+pattern and you're going to pick the movement that's closest to that pattern
+regardless or you're going to deconstruct which muscles are deficient find find
+uh what to train that way so the timeline and i know i'm beating all this into
+the ground base phase more volume i think size think bodybuilding bigger slab of
+marble to work with peak phase more load more force production lockout work is
+kind of a default again for the cns stimulation in addition to whatever potential
+weak point training that can be or rounding you out that can be and heavier work
+in disadvantaged areas so in a peak phase you might do deficits or you might do
+pause work but you're focusing on speed and being explosive so that it carries
+over to uh game day so even that's more neurological than it is mass so it's a
+little different lean on that other compound accessories movements that are less
+mechanically similar um these are great because they don't impact the recovery of
+the main lift nearly as much so i was talking about movements that are smaller
+lighter more inefficient these are movements where we cannot stress ourselves to
+the degree that we can with a topped out barbell lift that we are absolutely
+level 99 in those are the ones we can kill ourselves with and then we need weeks
+to deload from you don't need that from machines dumbbells unilateral work
+isolation work and so on and for that reason they should generally come after the
+mechanically similar movement especially after the main movement there are some
+times where you might put them before but generally if you're doing anything that
+looks like specialized strength training you don't want to pre-fatigue too much
+in a base phase you can i've experimented with that doing flies as a war but
+before benching or other things upper back work before you deadlift and that can
+be warranted in certain situations but you want to make sure that the work you do
+with those movements isn't blowing out or affecting your performance in the main
+lift how these other compound accessories work in peak phases it's determined
+entirely by personal preference once you've been around long enough and you've
+put these programs together time is going to tell which movements directly
+improve your peak performance and you might find that there's some that you've
+trained diligently and for a long time and you find that well when this one thing
+is up everything else goes great for me it was a reverse hyper and i think i've
+talked in the past i need a list of things that i had to put my foot in my mouth
+over because i had real strong opinions and ended up looking stupid when i ended
+up changing my mind so that was one where my erectors thickened out in a way that
+they just really didn't with normal hip extension stuff and i've been doing
+deadlifts heavy deadlifts for volume deadlift for reps a whole bunch of strong
+man movements good mornings rdls dumbbell stuff isolate whatever i started doing
+rdls and i immediately over a couple of weeks felt my erectors sticking out in a
+way that they never did made a huge difference along with all the other bracing
+stuff i did so that's a good example if i was getting ready for a big deadlift
+event i would do a ton of uh reverse hypers all the way up to the me probably
+until a week or two before so that's personal preference that's you figuring your
+body out it's like solving a puzzle don't take for granted that you can just
+follow a template and it will all work out the same you have to know what ticks
+you have to know where you're deficient and think critically about what might go
+in there but that's not going to fall into a very basic template and look at this
+this didn't format right the third bullet point is hanging off the screen that's
+what i get for using free software provided by google lighter accessory stuff
+machines cables dumbbells isolation again easy to recover from you can do them
+high frequency a lot of talk recently about how the one body part per week method
+of training for bodybuilding is kind of outdated and you really can benefit from
+doing two or even three times a week for certain muscle groups if you're
+isolating that also goes for sme heads that are strength oriented because we can
+do feeder days or gpp days that involve smaller isolation work that adds overall
+volume to the stuff that we need augmented so arm work for instance if you're
+writing a program it might be so full of compound movements that you think are
+vital you just don't have time to do more than a couple of sets of arms at the
+end so having another day where you do that that can work out well there's a lot
+of opportunities to sneak that work in so there's really no excuse exclusively
+high volume work usually you're gonna ditch this stuff going into peak prep or
+contest prep or a really really intense phase because this is an easy way to
+eliminate extra stress and increase recovery i say use these liberally most of
+you aren't doing enough most of you could probably do more if i had my way just
+about everybody would be doing a main lift uh mechanically similar movement and
+then the rest would just go down the line of like five six seven different
+exercises done very very fast to where the whole workout doesn't go longer than
+an hour 20. and i think that's viable i think all of you can train that way you
+just have to know that's how you should be training and put yourself on the clock
+hold yourself accountable but you would be amazed at what increasing the lighter
+accessory work does i'm telling you if you take it seriously it's so stupidly
+easy now for targeting weaknesses and i talked about this earlier you have to
+understand attacking the movement versus the muscle so we talked about locking
+out that's a the patterning of that the movement pattern you would work on is
+everything that happens above the point where the bar slows down so the idea is
+the bar heaves off your chest really fast you hit no man's land some of you
+long-lived bastards probably have this problem you have this gap in the middle
+it's this canning you have to cross if you can press fast enough to get past it
+you lock out no problem but once you start to slow if that bar stops you're
+three-quarters the way up and it's hopeless nothing you do no spitting screaming
+squirming is going to get that weight locked out so one of the things you can do
+is look at that pattern and say i need to train that pattern more well where am i
+weak well the midpoint i slowed down and that affects my ability to lock out
+maybe i should expose myself to more stress around that point okay you can set
+the bar somewhere around that point you can experiment right at it a little below
+little above you can do pin presses from the bottom to get comfortable generating
+force from a dead stop so you don't have to rely on momentum once the bar already
+gets moving you'd be surprised how much momentum accounts for right at mid chin
+or below your knees in a deadlift very common point people never ever do work
+where they are at a dead stop around that point generally they don't and the end
+result is that they get weak because the bar is never at that point you're never
+loaded at that point where there isn't momentum on the bar and it's an entirely
+different story when the bar slows down so doing reps at that spot extending the
+amount of time you're at that spot that's all very viable for increasing maybe
+muscle around that area certainly increasing neurological activity around that
+area to make you more resilient so you don't fall apart once you get there so
+that's the pattern that is looking at the movement and using similar exercises to
+get you better there the muscle would be looking at which which muscle's lagging
+i mean in a lockout we generally think triceps though it can come down to other
+things it could be let's say that as you press you do a shitty job of keeping
+your shoulders back so the shoulders roll forward as you press so now you have
+this joint that's doing all this work and all of these muscles are just firing so
+hard and fast and you get all of this instability as your shoulders round forward
+and you get halfway up and your pecs are fully contracted they can't contract
+anymore because your shoulders are all the way around it and you lose all of the
+stability which absolutely your ability to have a strong decisive lockout if you
+look at competitive lifters they floss through you see they keep their shoulders
+back and they're almost like the deadlift cue i give they can push your hips
+forward not pulling the weight up to lock it out it's the same thing you'll see
+these excellent benchers focus on gliding their elbows through the lockout
+instead of just pushing the weight to lockout so stability could be it and you
+might identify this other weakness but generally we look at these spots and we
+say okay well that tends to be triceps so this tends to be quads so if you can
+reduce down if you can eliminate all of the other potential variations and
+pinpoint it to a muscle that's where taking advantage of all this lighter
+accessory work comes in and like i said it is so easy so an example base phase
+and i really love scheduling uh workouts like this i do high frequency stuff
+occasionally it's valuable i generally do it on a case-by-case basis with people
+that have reasons they should or need to train high frequency but guys there are
+so many people that are the best in the world that train this way and this is how
+people generally used to train for a long time anyways it's user friendly it
+works extremely well i just had cody on from gzcl and this is essentially what he
+does we've seen it in so many popular programs and it populates the top 10 top
+100 lists of any class you might look at on open powerlifting more people have
+gotten good training like this that have gotten good using these really
+convoluted methods of high frequency so just follow the logic here main movement
+first you do it when you're fresh if you're a sprinter you are not going to do
+100 meter sprints after you ran a mile because you will no longer be training
+speed as a quality your power production will suffer you will be training those
+endurance faculties because you will be wiped and that's not productive to having
+this big hundred meter sprint you get it so for lifting if we're doing a strength
+oriented movement first you need to be somewhat fresh for it not entirely don't
+be a diva don't be one of those like well i couldn't help my friend move the day
+before because i had to lift right i'm not going to do cardio because i don't want
+to be fatigued i don't want any more systemic stress i got to just eat ho ho's
+and sit on the couch and watch my youtube channels and that's gonna just leave me
+completely recovered so i can dominate squat day in general you need to be
+somewhat fresh so in this example bench workout lockout focus that's my weakness
+i'm interested in general development building mass generally but also keeping in
+mind i have this thing that tends to hold me back so this bass phase what is my
+purpose more variety more volume round out weak areas so my main movement
+benching can't beat that mechanically similar movement close grip bench i'm a big
+fan of close grip benches anyways they're great as a basic developer again
+disadvantage grip more range of motion great for general pressing power uh in
+general upper body development a few set to six to eight rep range is a little bit
+higher the the same or just a little bit higher than what your main lift is going
+to weighted dips so now we're in other territory very beneficial ton of carryover
+not mechanically similar though neurological activity is going to be a little more
+deviated so performance here doesn't matter so much as fatigue i want you to
+remember that when when we're doing mechanically similar movements performance is
+a big deal it's a very big deal so you need to perform similarly to how you would
+perform on your main lift once you're out of that place once you're out of the
+woods there you can go ham you just want decimation yeah there might be some
+progression you're following but just stress is the name of the game and because
+these aren't mechanically similar they have a very limited ability to impact
+neurological recovery so dips i'm a big fan of now we're in hypertrophy range 10
+to 12. ooh four sets force that's cardio bro four sets of ten to twelve what is
+this a men's fitness article am i on t nation right now what is going on here uh
+dumbbell benching a great movement a lot of stability again a lot of you hate it
+because it requires getting out of breath picking up the dumbbells lugging them
+over setting them on your legs trying not to look stupid while you kick them up
+into position dumbbells are fantastic and it's a good way to reduce stress off
+your shoulders you can change the way you press to kind of alleviate stress off
+problem areas so i love dumbbell benching it's good to have it's essentially
+unilateral it's good to have some unstable movements especially in a base phase
+where you're not worried about maximal weight and then triceps triceps triceps
+got the dips fatigued a little bit or sorry you got the triceps fatigued a little
+bit with benching you got the uh close grip bench really drove the point home
+weighted dips by that time they're screaming by that time they're starting to get
+pumped and cramped up you're like oh my triceps are tired a little more benching
+after that with the dumbbells and then you go into french presses which i like is
+kind of a medium heavy tricep exercise they also tend to be a little easier on
+the elbows than skull crushers so fyi and then cable press downs smaller muscle
+groups when they lag delts triceps i mean there's examples of these small muscle
+groups that really are stubborn and they become a problem my rectors are a good
+example some high rep high high rep 15 20 rep work sometimes that's the thing that
+builds this little bit of receptivity like it can be good for growth if you were
+so shitty at fiber recruitment because they just weren't getting hit with the
+main movement sometimes going really really high rep and feeling those deep motor
+units get recruited and feeling that burn where they said the muscle starts to
+get twitchy it's like the first time you bounce your pecs it's like oh my god i
+feel my tricep like is that what it feels like to use your triceps when you bench
+really high rep that just burns can sometimes be the ticket to waking up those
+what i would call dormant muscles the ones that aren't used to being pulled
+online they're asleep they've been phoning it in when the alarm's ringing so this
+is how we wake them up higher up cable press downs band press downs bench tips
+are a great one those are easy to do kickbacks i don't give a grab the pink five
+pound dumbbells do 30 reps of kickbacks where you're in a steep forward bend holy
+you won't be able to pick up the cell phone to call your tinder date it's uh it's
+good work and this is enough volume what just happened there oh come on we're
+doing so well i was right up to the end that's what happens when i use this 20
+year old 20 year old trackball mouse an example of a peak phase for benching
+sorry i was halfway through my final thought and then my computer fritzed out i
+was saying before about the base phase ton a ton of reps total sets it's
+sustainable that could be done once a week without a problem other day if you
+want you can do a feeder workout if you want you can do overhead press shoulder
+emphasis if you want you can do some lighter benching there's a lot of options
+but that by itself is a standalone workout solid perfectly good going into the
+peak phase you should have done the bass phase long enough to have gotten a
+little more muscle and even if you don't look or feel bigger you don't weigh more
+you should notice your rep endurance is up you should notice you've improved in
+all of the movements you've been doing and that your capacity is really good and
+if you can say you got better at some of these movements that are a little heavier
+on the triceps or the lockout that says a lot for what you're about to do here so
+now you can start doing a lot more movement pattern targeting a lot more really
+focused specific targeting that works the neurological components which is what
+you need when you're skill building so bench press now we're at a heavier range
+instead of sets across i had a five by five plus on the bass phase that's five
+sets of five last set failure one of my favorite schemes i used that a lot now
+we're into top set so top triple with some back off work 10 down going into the
+mechanically similar movement now we have two we're more specific in a peak phase
+so more work is going to come from compounds and close variations of the main
+lift pin bench presses are great close grip benches are still great uh a couple
+sets three to six reps so i got three to five reps on the pin bench four to six
+reps on the close grip bench it's kind of arbitrary i went a little bit higher rep
+because of close grip again i think lighter movement a lot of this is arbitrary
+don't sweat these little changes in set and rep schemes a lot of it is just
+static noise into the other accessory the vital stuff that works it transfers but
+it's not as mechanically similar jm presses fantastic it's like a heavier more
+serious french press it's a mix between a tricep extension and an actual press so
+i think it does a good job of teaching you how to floss your elbows through of
+really kicking your elbows in to finish off that movement uh jam presses are
+great and they're heavy that's a good movement to get heavy that will transfer
+over to your um your competitive work and then the light work band press downs
+high rep smoke the triceps easy to recover from good for getting blood in maybe
+your elbows are starting to feel beat up in the heavier phase so stuff that drives
+a ton of blood in bandwork is great for that for warming up trouble areas and for
+smoking them at the end of the workout great for getting the tendons to grow you
+need a lot of blood blood flow to get the tendons thickened out if you don't do a
+lot of pump work they might not thicken out as fast that's an arm wrestling tip i
+got from guys that need those thick tendons they don't have the option of just
+doing a little bit of lifting a little bit of time on the table and hoping that
+it's enough they got to thicken out their fingers and wrists that's one of the
+tricks a lot of those guys use so you can see how these principles might be
+applied to other exercises how you might structure workouts with say deadlifts
+the order you might put in a deadlift versus a rack pull okay well why would i do
+a rack pull because they're fun absolutely they're fun but what do they do okay
+well if i'm sticky at that point around the knee maybe that'll help okay where are
+you sticky is it 13 16 18 inches well right below the knee cap right at about 17
+inches is no man's land i'm fine above or below okay well don't go above or below
+if you're working that weakness that's where it needs to be if you want that
+motor patterning benefit what else do they do well the potential lift weights
+higher more cns stimulation okay so do i want to exploit that and if i do when's
+that going to be featured the base phase or the peak phase if you're listening you
+should be able to answer that so this should give you some conceptual insight into
+how we select these movements how we think of them differently and how that
+informs our decision to pick them and put them into a program so that is all i've
+got for today i wish i had a flow chart i could give you that makes all of these
+decisions for you unfortunately i do not this is the underlying uh conceptual
+model that you're going to use moving forward but yes you do have to apply a ton
+of trial and error and just talk to as many people as you can specifically people
+who seem similar to you or have had issues that you have and that will help you
+with some potential shortcuts but there's no way around it start out with what you
+think makes sense take notes as you go adjust as needed and use this conceptual
+discussion to help inform those decisions so hopefully you guys pulled something
+out of this i know i've covered these topics before and a lot of this can be
+redundant but i just started using the the slideshow and i think it's helping out
+my ability to stay on task on these podcasts so i'm going to continue using them
+and i'm probably going to use it on a bunch of videos i did before i thought were
+pretty shitty so this is one of them thank you so much for watching guys to find
+out more bass strength and my other books are on amazon m and
+empirebarbellstore.com paperback is on amazon only they're just faster and they
+were up less personalized 12-week templates and one-on-one mentorship is
+available i've been ramping up online coaching i had problems with it in the past
+i got frustrated by not being able to be in the room with you and be a control
+freak but i've grown a lot with this talked to some people who are very good at
+structuring this stuff and i've gotten some good work around so that i actually
+feel confident that i can help you with where you need to be helped instead of
+just copying and pasting a template there's a questionnaire there's a lot of
+hands-on work a lot of filming a lot of back and forth you get the benefit of
+having my personal cell phone number that's worth it by itself and patreon and
+facebook those are the places to either interact with or support me uh patreon
+and youtube memberships of course are paid but that's what allows me to do this
+so i appreciate everybody's support there the base strength forum is absolutely
+free a lot of good people there uh yes i did i called them quality somebody left
+a comment in the forum and he posted he said did alex call us quality yes we have
+quality members in the bay string forum they're very helpful a lot of them can
+answer questions on my behalf by having read through my stuff i think that's
+pretty cool so if you have questions go ahead and drop by any of those platforms
+and they will be answered thank you so much for stopping by guys until next time
+this is bromley i'll see you

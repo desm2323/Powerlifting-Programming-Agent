@@ -26,24 +26,220 @@
 #         until all 4×12, then add
 #   9:08  DDP fails when fatigue from preceding exercises is unpredictable
 #   9:14  Method 2: REP-RANGE METHOD (Russian bodybuilding / preferred)
-#  10:06  bodybuilder analogy: 30s rest drop sets early in workout → can't
-#         predict downstream performance → must wing it on accessories
 #  10:24  Control what you can: fix the SETS (e.g. 4 sets)
 #  10:31  Fix the REP RANGE (e.g. 8-12)
 #  10:45  BLOCK-LEVEL SHIFT: run a rep range for ~4 weeks, then shift it
 #         (8-12 → 6-8) OR swap the exercise for novelty
 #  11:20  On-the-fly weight adjustment: hit hard 12 → jump up for 10 → drop
 #         down when can't hit lower bound of range → stay in range
-#  11:43  Variable loading is GOOD — boring to keep same weight all sets
 #  12:24  RPE TARGET: recommend reaching RPE 10 on accessory work
 #  12:38  Default range RPE 7-8 — don't out your spine going to failure
-#  13:00  Block structure: 4 weeks at rep range, then adjust range or
-#         swap exercise
+#  13:00  Block structure: 4 weeks at rep range, then adjust range or swap
 #  13:25  WHY THIS WORKS: accessories don't accrue fatigue at the rate
 #         main lifts do (hamstring curls vs barbell DL)
-#  13:44  "go ham, go nuts, the world is yours" — chase stress on
-#         accessories, focus on a few variables (sets + rep range + effort)
+#  13:44  "go ham, go nuts, the world is yours" — chase stress on accessories
+#
+# --- FULL TRANSCRIPT ---
+# The timestamp anchors above remain the citation references used in
+# expert_knowledge.py; the body below is the complete spoken transcript.
 
-[Timestamps above are the citation anchors referenced in
- expert_knowledge.py. Re-run scripts/ingest_ben_videos.py to regenerate
- the full timestamped transcript body.]
+what type of progression scheme should you use on accessories and should you go
+to rpe 10 on every set this question came from mads from the patreon page and
+remember guys if you have ideas for videos or you have questions that you want
+answered go ahead and check out the patreon page it's five bucks a month and for
+the content to get to uploaded on a daily basis you're not going to find a
+better deal so go ahead and check that out progressing accessories now I've
+written a lot about how to progress your main lifts and that's the backbone of
+all of your programs no matter what type of program you run the most important
+thing you have to consider is how you are going to implement the specific amount
+of stress you need in the actual workout for the main lifts and how you're going
+to plan to move those forward over time there are a lot of different methods a
+lot of different options they all work but they all have a learning curve where
+it starts to get a little sticky is when you get further down the workout because
+you're going to have a little more trouble predicting exactly how fresh you're
+going to be so you can't Implement a progress regression that requires you to
+know exactly what your performance is going to be like or that anticipates that
+you're going to be able to evenly and cleanly build off of last week's
+performance it's it's not really the case that you're able to increase
+everything in a workout in a block every session week to week without fail it
+doesn't really happen that way so let's break down kind of how the workouts go
+in order how they uh each exercise kind of bleeds into the next one and let's
+get a sense of how we should expect to feel at each stage during an individual
+workout and that'll give us a little more clarity when it comes to making
+decisions and trying to plan to progress those uh smaller but still very vital
+accessory exercises so this is an example of just a high volume deadlift workout
+if you're able to run through something like this uh you're probably not going to
+be good for anything other than maybe squatting later in the week maybe some
+speed work but this is probably going to be a once per week type type of workout
+generally in that type of scenario and that's usually what I prescribe is very
+high volume work a lot of different exercises a lot of sets not all the time but
+specifically in developmental and hypertrophy phases it just works so good you
+generally start with a warm-up whatever that might be stretching so you can get
+into position a bit easier cardio to get your heart rate up any type of
+pre-fatigue stuff bracing those are the buy-ins that I usually recommend that
+kind of address the work that you're likely to leave out anything that prepares
+you for the heavy work counts as your warm-up but it shouldn't fatigue you
+should gas you out then you go into your main lift now the main lift is generally
+going to be the heaviest and most specific exercise you do not always
+occasionally skill work might pop up first but generally we think of the main
+lift as the squat bench deadlift overhead or whatever variation you're focusing
+on that day that you're going to expend the most effort on that you need to be
+the most fresh for then sometimes again not always you'll have a secondary main
+lift that's going to be kind of supplemental if you're running a blended
+approach it might be doing deadlifts after you squat or it might be doing
+overhead press after you bench if you're in a once per week type split like this
+the secondary main lift it's going to be supplemental for the main lift so in
+this example it's going from deficit deadlifts to good mornings good mornings
+aren't as specific they still hit all of the muscles and movement patterns we
+want but the movement itself is different uh it's not quite as heavy you're not
+going to get as heavy or go through the range of motion in a good morning that
+you would with a deficit deadlift so it's different uh to that extent but it's
+still a very valuable accessory exercise that can help build your deadlift your
+hip extension power quite a bit then we go into what I would consider our
+accessory and I have those split off into primary and secondary basically
+depending on if their compound movements or not again how specific are they
+What's Your Capacity to handle load in them is it a smaller isolation movement
+that doesn't do a ton of systemic damage or is it a compound movement maybe it's
+done in a machine or using dumbbells or something that's still very taxing even
+though the load quite I can't quite get as heavy so this is like the general
+gradient heavy and specific to kind of less heavy non-specific and what that
+means is that we're going to have the highest effort meaning the lowest rir it's
+going to be warranted at the end of the workout these early exercises you really
+have to plan these are the most planned progressions the primary and secondary
+movements you want to know ahead of time what rep range am I working in what rpe
+am I working at am I going to failure on any of the sets is it all sub Max work
+am I focus on density am I just focus on volume am I just trying to beat
+intensity again there are a ton of options for doing this you don't have to do
+all of them you don't have to try to implement all of them you just have to
+commit to one and know that that's what you're doing because that's what will
+dictate the decisions that you make after that as you get further down the list
+imagine doing repeating sets of deficit deadlifts which are very taxing a lot of
+weight disadvantage position hard on the low back the upper back the hips a lot
+of big muscles being used a lot of repeating sets even if it's relatively low
+rpe if it's pretty easy work you're going to have a lot of systemic fatigue built
+up going into good mornings now you want to be somewhat fresh going into good
+mornings if you're completely blown if you took all these deficit deadlifts just
+way into the weeds your low back is going to be trashed your hips are going to
+have nothing left and you're going to be folding over with a fraction of what
+you should be so you still need to have your strength somewhat good to be able to
+get anything meaningful out of that secondary main lift work so that's where
+having a progression that accounts for that comes in by the time you're in these
+primary accessory exercise let's say dumbbell Romanian deadlifts not nearly as
+heavy as barbell Romanian deadlifts not nearly as heavy as good mornings
+especially as deadlifts themselves but dumbbell rdls still a pretty hearty
+exercise a lot of range of motion still heavily taxing on a lot of different
+muscle groups a lot of big muscles and that can still take it out of you and if
+you go in wiped you're not going to be handling anything 600 pound deadlifters
+or you know Hanging On by a thread trying to do dumbbell rdls with like the 45s
+and you're not getting anything out of that so you still need to be a little bit
+fresh but as we go down the list you can anticipate being more fatigued more
+fatigue more fatigued so if we take these movements and we follow our
+progression and the easiest way I conceptualize it is starting out week one a bit
+easy getting your toe in the water I talk about the dirt road analogy you start
+on on asphalt so you have traction you build up momentum and then you give
+yourself room to run into the weeds so lower effort leaving a lot of reps in the
+tank then closing that Gap a little bit so even if you don't have a perfect
+workout or get stronger starting out at a lower rpe it gives you that Runway so
+you can still add weight you can still increase the stress so that's how I like
+to handle uh progressing forward in a block and again a lot of different ways to
+do that now if we're increasing from an rp6 to a seven to an eight or nine over
+all of those working sets for these big heavy exercises you can bank that by the
+time you get to your dumbbell rdls or your hip thrusters or your back extensions
+or your hamstring curls you can bank that you are not going to have nearly as
+much gas in the tank and you're going to have a harder time getting through
+those so it is foolish to go into those expecting that you're going to be able to
+continue performing better and better so how do you handle these then how do you
+progress your accessories because you don't want to just disregard them you don't
+want the training to be random there should still be Direction there are two
+options and I like one a bit more than I like the other and I'll get into that
+the first option probably is only going to work for the earlier exercises when
+you're still a little refreshed maybe if you take 10 minutes to pound an intro
+workout or you you finish off your Sour Patch Kids maybe you know right after the
+good mornings that's when you finish off your rain energy drink so you have a
+little bit of energy going in the first one you might be able to get away with a
+dynamic double progression and I've made a video about that Dynamic double
+progression is you worry about meeting your rep count at a certain weight first
+and then after you accomplish that then you add we so let's say you start off you
+know you want to do four set to 12 and you want to do it with 225 pounds and you
+end up going 12 then you get a little bit tired you get 10. so right there you got
+to drop the weight so you can get 12 and 12 again the next workout you keep it at
+225 and then maybe you get 12 all the way across and once you do that then you
+add weight and that's your progression now if the first exercise is just wipe you
+out so you actually do worse on the second workout than you did on the first one
+that all goes out the window so that's why this isn't always appropriate you
+should be able to do these for isolation exercises you should be able to do these
+if you're not entirely wiped after the first couple exercises but I don't like to
+be able to bank on a dynamic double progression instead I think it's simpler I
+think it's easier and I think it works every bit as well if you just Bank on good
+old-fashioned Russian bodybuilding because this is what bodybuilders do remember
+that all of this stuff serves a purpose we're trying to reinforce movement
+patterns yes but we're really just focused on growing muscle and reinforcing
+these areas so that we can get transferred to the main lift it doesn't really
+matter that we progress it on this specific timeline so if you consider a
+bodybuilder who has all of these different exercises they have to do they have no
+idea how much weight they're going to be able to handle they have no idea how
+fatigued they're going to be they might do some crazy ass early in the workout
+where they do like Drop sets of squats and they're on like 30 second rest breaks
+and maybe they do 15 sets pyramiding up and then back down and by the time you
+get to leg presses and then front squats and then leg extensions you don't know
+what to expect so you have to be able to wing it so basic bodybuilding work is
+going to be controlling for the variables that you can control no matter what so
+you want to set the number of reps so you want to set the number of sets as
+static so no matter what you can commit to doing say four sets or five sets and
+you want to set the rep range that's whatever range you're working in that fits
+into the plan as a whole you can start in a hypertrophy range let's say eight to
+twelve reps run that for four weeks and then shift to something a little bit lower
+like let's say six to eight reps and you can keep your program on a bigger scale
+still ticking forward while giving you some play in the joints in any given
+workout that you do so in this example let's say you're working eight to twelve
+reps over four sets you start off high fatigue sets in the Reps drop a little bit
+sets in again and you think okay if I don't adjust the weight then I'm going to
+miss my target rep range so I lighten the weight and that allows me to get more
+reps and it's that type of on-the-fly decision making that's going to keep you in
+the pocket keep you hitting the right amount of stress now in this model efforts
+staying really high fatigue at the same weight is catching up with you and the
+number of reps you're doing is dropping because the effort is very high so you're
+very close to failure on all of those then once you start to get closer to the
+lower limit of where you're supposed to be that's when you drop the weight so the
+Reps come back up so you're constantly adjusting the weight now I like this for a
+few reasons I'm a big fan of variable loading not only is it boring to keep the
+exact same weight for all of your working sets like you do in a dynamic double
+progression at least until you run into a wall and you have to adjust the weight
+I like to be able to move the weights around so if I'm doing 8 to 12 reps I can
+start out with a hard set of 12. and then I might jump the weight up a little bit
+I might intentionally go to 10 or 8 reps depending on how that first set went but
+as long as you're in that range and as long as you're working very very hard
+you're going to find this stress is going to be ticking up week to week and even
+if it doesn't even if you don't hit a PR in a workout if you handle those weights
+with a lot of effort in that range after you've increased across this ramp right
+here for the first few exercises that can still represent progress even if
+mathematically it doesn't look like you did more so this allows you to control
+for the things you can so in short I recommend getting to rp10 on your accessory
+workouts that doesn't mean every set you do is going to be balls to the wall you
+know try not to out your spine a level of failure you want to be able to still
+execute you don't want to be on the ground for five minutes in between sets
+writing around so RP 788 is still by default a pretty good target range but you
+can definitely allow yourself to get into the weed so that's how I recommend you
+progress it so if you're looking at four weeks you got your rep range just do work
+in that range don't worry about trying to get as heavy as you can or trying to
+meet certain benchmarks you have this range to work with move up and down adjust
+the weights as needed every workout you come in the effort's high so by default
+you should be trying to handle heavier weights but again you always go buy what
+you can handle no wishful thinking here in the next four weeks if you adjust this
+rep range down or if you swap the exercise out that gives you another period where
+now you're refreshed and you have these new goals to chase now the reason we can
+do this that we don't do this for the main list when we do it for the accessory
+that's really systemic stress hamstring curls and back extensions do not accrue
+fatigue dumbbell Romanian deadlifts do not accrue fatigue at the rate that
+regular barbell deadlifts do so that is ultimately why we get away with it so
+basic body building stuff long story short go ham go nuts the world is yours you
+don't have to uh be white knuckling your program to to get a lot out of it you
+can wing it a little bit and you can just focus on a few variables that's how I
+like to run it spend more of your time figuring out how to make this work
+sustainable so you can progress that on an appropriate timeline that's all I got
+for today guys remember check out the patreon this question came from mads from
+the patreon page thank you mads for contributing leave questions in the comments
+remember to download bullmastiff 13 Pages I've given away for free outlining top
+to bottom the program it's become very popular a lot of people have seen really
+good results off of it so I'm really proud at the way it's been received so
+download that for free below until next time this is Bromley I'll see you

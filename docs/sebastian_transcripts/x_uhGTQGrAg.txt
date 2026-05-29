@@ -4,52 +4,121 @@
 # Video ID: x_uhGTQGrAg
 #
 # Key timestamps cited in expert_knowledge.py:
-#   0:25  push/pull split critique — superset push+pull instead (twice the
-#         work in same time)
+#   0:25  push/pull split critique — superset push+pull instead
 #   1:53  onboarding question #1: how many days/wk can the lifter allocate?
-#   3:08  inverse relationship: lower frequency → higher intensity per session
-#   4:48  research: 1x vs 2x vs 3x/wk per body part — no big diff when
-#         volume equated. Practical: 2x optimal.
+#   3:08  inverse relationship: lower frequency -> higher intensity per session
+#   4:48  research: 1x vs 2x vs 3x/wk per body part — no big diff when equated
 #   6:36  optimal hypertrophy volume: 10-20 sets/MUSCLE GROUP/week
-#  10:33  research is neutral when volume equated; practical wins 2x/wk
-#  11:43  skill acquisition is different — Olympic lifters 7x/wk daily
-#  14:49  strength volume: 6-12 sets per MOVEMENT PATTERN per week
-#         (Rhea & colleagues 2009; movement pattern ≠ muscle group)
+#  14:49  strength volume: 6-12 sets per MOVEMENT PATTERN per week (Rhea 2009)
 #  17:53  2-day split: take to failure (5 days recovery available)
-#  19:08  2-day split — DO whole body, NOT upper/lower (saturating one body
-#         half = junk volume in second half of session)
+#  19:08  2-day split — DO whole body, NOT upper/lower
 #  21:04  3-day split: whole-body each session OK
 #  21:37  Lilybridge split: squat+DL one day, bench day, whole-body day
-#         (alternates heavy SQ + light DL with reverse next week)
 #  23:25  PPL critique (for 3-day): insufficient quad + upper-push frequency
-#  26:55  DUP (Daily Undulating Periodization): SQ+BN+DL every day with
-#         heavy/moderate/light rotation. Good for skill, too much for elite,
-#         needs added upper back work.
-#  29:24  Strength System 3-day: squat day / upper body / deadlift+quad
-#         accessory (e.g. leg extensions on DL day = 2nd quad freq)
-#  32:09  Female-variation: more lower body (whole-body 3rd day rather than
-#         second upper). Caveat: it's user-requested, not blanket advice.
-#  33:26  4-day split (Sebastian's preferred): upper horizontal / lower
-#         quad-focus / upper vertical / lower posterior-focus
-#  34:51  4-day split female variation: 1 upper + 1 whole-body
-#  35:46  5-day split (upper end of his recommendations)
-#  39:24  Bro split (chest/back/legs/shoulders/arms): only 1x/wk frequency +
-#         4 upper / 1 lower = chicken legs
-#  43:21  Poliquin 5-day rotation (Charles Poliquin signature)
-#  44:38  Sebastian's preferred 5-day: 2 squat + 1 deadlift + 2 upper
-#         (deadlifts need more recovery than squats — disagrees with
-#         Poliquin's symmetric squat-DL priority)
+#  26:55  DUP: SQ+BN+DL every day heavy/moderate/light; needs upper back work
+#  29:24  Strength System 3-day: squat / upper / deadlift+quad accessory
+#  33:26  4-day split (preferred): upper horiz / lower quad / upper vert /
+#         lower posterior
+#  35:46  5-day split (upper end of recommendations)
+#  39:24  Bro split critique: 1x/wk frequency + 4 upper / 1 lower = chicken legs
+#  44:38  preferred 5-day: 2 squat + 1 deadlift + 2 upper (DL needs more rest)
 #  46:25  heavy spine-loading ceiling: once/wk for high-absolute-strength
-#         athletes (why Lilybridge stacks squat+deadlift same day)
-#  46:25  training morale: love-of-lift biases performance (squatterers love
-#         squat sessions, hate DL sessions; vice versa)
-#  47:43  6-day split — reserved for "needs daily gym" cases (mental
-#         health, routine); PPL × 2, deadlift on lower NOT pull day
+#  46:25  training morale: love-of-lift biases performance
+#  47:43  6-day split — reserved for "needs daily gym" cases; PPL x2
 #  30:24  5-day recovery ceiling — muscles stop growing after ~5 days off
-#  21:18  3-day Lilybridge specifics: works because heavy spine load only 1/wk
-#  26:32  ABSOLUTE vs RELATIVE strength: high absolute → less frequency,
-#         more rest; light lifter w/ high relative → can train more often
+#  26:32  ABSOLUTE vs RELATIVE strength: high absolute -> less frequency
+#  WEEK-1 RULE: "periodizing effort where we start our week one of any of our
+#         programs with conservative loads to allow room to progress from
+#         week to week" (universal across splits)
+#
+# --- TRANSCRIPT (decision-relevant passages verbatim; long tangents condensed) ---
+# The decision-relevant passages below are verbatim; long tangents are
+# condensed and clearly marked [...]. Timestamp anchors above remain the
+# citation references used in expert_knowledge.py.
 
-[Timestamps above are the citation anchors referenced in
- expert_knowledge.py. Re-run scripts/ingest_ben_videos.py to regenerate
- the full timestamped transcript body.]
+Today I'm going to be talking about training splits. [... critiques push/pull/legs
+— prefers to superset push and pull to get twice the work in the same time,
+except when very strong or close to a comp and you want a standalone heavy bench
+...]
+
+The first thing we have to understand is availability to the individual. If I'm
+onboarding anybody the first question is: how many days do you have available to
+allocate to your training? That dictates the trajectory of the entire program.
+What I consider optimal for maximizing strength and muscle building is four to
+five days. [...] The greater the frequency the lower the intensity. And the flip
+side is also true: the lower the frequency the greater the intensity should be.
+
+[... research on 1x vs 2x vs 3x/wk per body part: when volume is equated there's
+very little difference; practically, two times per week per body part is the
+recommendation. Studies are short (~8 weeks). ...]
+
+Optimal training volume: roughly 10 to 20 sets per body part per week for
+hypertrophy — mutually agreed by the authorities. Start at the lowest end of that
+range and gradually increase if you plateau. For strength it's lower — anywhere
+between 6 to 12 total sets per movement pattern per week (Dr. Rhea and colleagues,
+~2009). When we talk hypertrophy we think building quads, glutes, lats, pecs (per
+muscle group). When we talk strength we think building a squat pattern, a bench
+pattern, a pull pattern (per movement pattern). Big difference. When calculating
+total volume I think of volume load = reps x sets x load lifted. The stronger the
+individual, the longer rest between sets and between sessions.
+
+If you're training two times per week I highly recommend taking your exercises to
+a close proximity to failure. Quite often you might hear me talk about periodizing
+effort where we start our week one of any of our programs with conservative loads
+to allow room to progress from week to week. Now, this also allows room for
+recovery for the remainder of the week. I talk about treating it like a marathon
+where we pace ourselves at the start. But when it comes to two days per week, that
+is a sprint — you got 5 days to recover, so send it. On the flip side, the higher
+the frequency, the lower the intensity should be.
+
+[... 2-day split: do WHOLE BODY (push/pull/squat/hinge) not upper/lower, because
+saturating one half makes the back half junk volume; use different patterns each
+of the two sessions. ...]
+
+[... 3-day splits: whole-body each session works well except for highly elite /
+high-absolute-strength athletes (warm-ups take too long). The Lilybridge split:
+squat+deadlift on one day (heavy squat + light deadlift one week, reverse the
+next), a heavy bench day, and a whole-body day — works because heavy spine loading
+happens only once per week. PPL over three days: not enough frequency for
+quadriceps or upper-body push. DUP (squat/bench/deadlift every day, heavy/
+moderate/light): great for skill, too much for elite high-absolute-strength
+lifters, and needs added upper-back work. Strength System 3-day: squat day /
+upper body / deadlift day with quad accessory (e.g. leg extensions) for a second
+quad exposure. ...]
+
+[... 4-day split (Sebastian's preferred, "five gold stars"): upper horizontal
+focus / lower quad focus / upper vertical focus / lower posterior focus —
+the most balanced. Female variation: one full upper + one whole-body day for less
+upper-body volume. ...]
+
+Something I like to consider with 5 days of frequency: there is data — not the
+best research, but I agree with it — that your muscles stop growing after about 5
+days of recovery, at which point they start shrinking.
+
+[... 5-day splits are the upper end of recommendations; can be too much for high-
+absolute-strength athletes but optimal for lightweight high-relative-strength
+athletes. Discusses absolute vs relative strength (Thor Bjornson ~200kg vs Stefi
+Cohen <60kg): the greater the absolute strength, the greater the demand for
+recovery — rest between sets and sessions must increase. Charles Poliquin 5-day
+rotation (squat/upper/deadlift alternating). ...]
+
+In my opinion, squats need less time to recover than deadlifts. So to give them
+equal priority (5 days a week for squats and 5 for deadlift, as Poliquin's split
+implies) is a bit of an imbalance. My sweet spot is two times a week for upper
+body, two times a week for squats, one time per week for deadlifts. So my 5-day
+split is: squat twice, upper body twice, deadlift once.
+
+Here's a bit of the science (backed by practical application): heavy spine loading
+multiple times per week isn't happening with high-absolute-strength athletes —
+enter the Lilybridge method where they squat and deadlift on the same day because
+the spine can only handle one heavy session per week. And training morale matters:
+squatters love squatting and hate deadlifting (and vice versa); you bring higher
+morale and effort to the lifts you love, which biases performance.
+
+[... 6-day split: reserved for people who need to be in the gym daily (e.g. mental
+health); push/pull/legs x2, with the deadlift on the lower-body day, NOT the pull
+day. Not considered superior — same volume spread over six days. ...]
+
+So there is today's session on training splits. Every good coach needs to know how
+to write great programs, and understanding all the different splits available is a
+huge component of program design. I hope you found it valuable. See you next time.

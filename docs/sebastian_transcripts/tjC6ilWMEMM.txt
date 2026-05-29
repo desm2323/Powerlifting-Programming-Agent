@@ -8,7 +8,8 @@
 #   1:46  selection + order cannot be separated; first ex serves trainee goal
 #   3:54  sprinters analogy (first ex = best at; place highest priority first)
 #   4:39  law of diminishing returns; first set > second set
-#   6:02  exercise redundancy definition (same muscle, same joint actions, same resistance profile)
+#   6:02  exercise redundancy definition (same muscle, same joint actions,
+#         same resistance profile)
 #   7:09  more than one secondary exercise — keep adding what was neglected
 #   7:28  degree of difficulty decreases through the session
 #   8:01  ancillary exercises (low-cost feel-good or joint-health closers)
@@ -17,18 +18,329 @@
 #  14:30  fatigue management for advanced lifters; specificity priority
 #  16:11  conventional DL = most fatiguing; weekly skill, fortnightly heavy
 #  18:16  top set + variation model (vs top set + back-down)
-#  19:13  Halfthor example: 1×1 conv DL + 2×5 snatch-grip deficit DL (~60% TM)
+#  19:13  Halfthor example: 1x1 conv DL + 2x5 snatch-grip deficit DL (~60% TM)
 #  22:34  8-CATEGORY MODEL for structural balance
 #  23:23  knee-dominant vs hip-dominant squat distinction
 #  27:08  loadability per movement profile (compound vs isolation vs stretched)
 #  28:00  flared bench / knee-over-toes / stiletto squat — NOT for 1RM
 #  29:50  pec tear at full stretch (weakest contractile length)
-#  35:50  rectus femoris is biarticular — neglected in compound squats → leg extension
-#  39:30  hip thrust = fully shortened glute; deficit/snatch-grip DL = fully lengthened glute
-#  40:24  short head of biceps femoris — only knee flexion targets it → leg curl, Nordic
-#  41:11  peaking example with top-set + variation (low-bar squat 1×1 + 2×4 paused)
-#  42:25  4-week peak phase (significant volume reduction; longer than 4wk → detraining)
+#  35:50  rectus femoris is biarticular — neglected in compound squats
+#  39:30  hip thrust = fully shortened glute; deficit/snatch-grip = lengthened
+#  40:24  short head of biceps femoris — only knee flexion targets it
+#  41:11  peaking example: top-set + variation (low-bar 1x1 + 2x4 paused)
+#  42:25  4-week peak phase (significant volume reduction; >4wk → detraining)
+#
+# --- FULL TRANSCRIPT ---
+# The timestamp anchors above remain the citation references used in
+# expert_knowledge.py; the body below is the complete spoken transcript.
 
-[Timestamps above are the citation anchors referenced in
- expert_knowledge.py. Re-run scripts/ingest_ben_videos.py to regenerate
- the full timestamped transcript body.]
+Today's episode is going to be on exercise selection and exercise order. They
+kind of go hand in hand. And in this discussion, I'm going to be talking about a
+concept called exercise redundancy where we consider that we don't just design a
+program based on our favorite exercises. What we need to consider is if you get
+our favorite exercises, we start with whatever it is the highest priority and
+then it's not just the second favorite exercise. It's like, well, this exercise
+may have covered off some of the things that the second exercise that you your
+second favorite exercise already does, so there's no need for this second
+exercise anymore. We need to consider something that we haven't achieved when we
+do this first exercise. So, those are the concepts that I'm going to be teaching
+as well as the exceptions to that rule. So, stay tuned. I'm going to polish this
+up. These are one-hour presentations and I'm going to cut out all of the
+introductions where I say hello to my people so it's as quick and concise as
+possible. I hope you guys enjoy it. This is kind of geared around anyone who's an
+industry professional for sure, but if you write programs for yourself, this is
+information that I would say majority of people just don't know. And I've been in
+this industry for over 20 years. And not just like in the industry, I've worked
+really really hard in this industry to be actually good. and the programs that
+I've created have developed some of the strongest athletes on the planet and I'm
+giving you this for free. So, hope you enjoy. Let's do it. My favorite topic to
+discuss and that is anything to do with program design and it's a small component
+of program design and arguably one of the most important and that is exercise
+selection and exercise order. So this is going to be teaching you and helping you
+create programs that make sense. Okay. Exercise selection and exercise order
+cannot be separated. Once the exercise is chosen, it influences every exercise
+that follows. Designing an effective session is not about picking the best
+exercises for a muscle group or selecting your favorite lifts for each body part.
+It's about selecting movements that serve the individual's primary goal and
+sequencing the exercises logically. So what does this mean? So, we've got, you
+know, leg day, chest day, whatever our bros split is. And think about your
+favorite muscle group. And you think, what's my favorite exercise? That's what
+we're going to do. What's my second favorite exercise? That's what I'm going to
+do second. What's my third favorite exercise? That's what I'm going to do third.
+And so on. And just pick the best exercises for that muscle group and just do
+them all. Because why would I want to do bad exercises? The fact is once we've
+chosen our favorite exercise or the the most important exercise that we're going
+to be doing first, it changes what that second exercise is going to be. So, we
+don't just choose the second favorite or the second best exercise for that muscle
+group. You think about an exercise that hits areas that you've neglected in the
+main movement, which will probably be very different to your second favorite
+exercise for that muscle group. So, this is the key considerations for program
+structure. And this is another topic. You know, when I speak to you guys, it's
+like I teach you these concepts. Don't just sit there and go, "Great concept.
+Let's just move on and do what we were already doing. Please use this." Okay?
+Copy me. All right? You have my permission. All of these concepts are yours. I
+want to see you program with an understanding of this. Okay? So, the first
+exercise of the day is the highest relevance to achieving the trainees goal.
+Okay? So, what does the trainee mean? Like, if I'm the trainer and I'm coaching
+you, you're not trying to fulfill my goal. you're trying to fulfill or I'm trying
+to fulfill your goal. The person who's following the program, it needs to be what
+is the most important to that individual. Now, this is usually the most specific,
+most complex, and most stimulating, and also the most fatiguing exercise of the
+day is what needs to be done first. So, a little analogy that I often use when
+we're considering exercise order is if we had two groups of athletes, both of
+them were performing exercises A, B, C, and D. And one group performed those
+exercises in that order, A, B, C, D, and the second group did it in reverse
+order, D, C, BA. The first group would be the best at exercise A, second best at
+B, third best at C, and so on. The second group would be the best at exercise D,
+second best at exercise C, and so on. Moral of the story, okay, place first, your
+highest priority. That's what you're going to get the best at, which makes a lot
+of sense because that's when we have the most amount of energy and therefore
+we're going to apply the most effort and therefore we're going to get the best
+results. Okay, there's a lot of research on uh things that talk about not in the
+same words, but the law of diminishing returns. So the first things that we do in
+the day gets the most stimulus and even like the very first set of the day gets
+the most stimulus. The second set doesn't provide as much return on investment as
+the first set and the third set even less and fourth set even less. Which is
+where team low volume team now talking about the need for reducing volume and the
+need for reducing the amount of sets that you do on every single exercise. So, a
+lot of people are now saying things like you don't really need to do more than
+two sets of any given exercise. Why? This is due to the law of diminishing
+returns. The first set provides the highest stimulus. The second set
+significantly less return on investment than the first. And the third set of the
+day is even worse. So therefore, why bother doing it? Now, I believe it's not
+that simple. Okay? It's overly simplified. Yes, the law of diminishing returns
+does apply. Quoting Alex Horoszi, the law of diminishing returns are still
+returns, right? So although they may be less, we are still benefiting from it.
+But either way, we need to take this into consideration when we're considering
+our secondary exercise in our, you know, by the time we've finished our first
+sets, our first exercise of the day, we are absolutely going to have accumulated
+some fatigue. And what we want to do, and this is what I'm going to define next,
+is avoid a concept called exercise redundancy. Okay? So instead of choosing the
+second best exercise for that muscle group or your second favorite exercise for
+that muscle group, what we need to consider is the areas that we've neglected in
+the main movement. So what could we have neglected? So I've defined it here as
+the joint angles, ranges of motion or muscles neglected in the main movement. The
+choice of exercise here must be less fatiguing than the first exercise, but still
+addresses ranges or demands not fully covered in the first exercise. Now, a lot
+of the times, and this is what we are going to be going into, I'm going to give
+you guys examples of my eight category model for exercise selection, achieving
+structural balance. So, whenever I'm writing a program, typically I've got this
+eight category model in front of me. Well, I don't physically have it, but I I
+know it very well. It may help you guys to have it plastered up in front of you.
+And it's very easy to just kind of choose an equal amount of effort and volume
+from each of these eight categories rather than piling up a ton of volume in any
+single category. And I'm going to be elaborating on that in a moment. Now, here's
+the next thing. There can be more than one secondary exercise. So, just because
+secondary means number two, um there are instances where we still have neglected.
+So after we've done our main exercise and our secondary exercise, there could be
+some areas of that single muscle group that we've neglected, which I'll explain
+in a moment. After this point, so what we need to consider is the degree of
+difficulty must decrease as we progress through the session. The first exercise
+of the day is going to accumulate the most fatigue. The second exercise of the
+day, we don't have as much energy. So therefore, don't do a really, really hard
+exercise. And then the third exercise of the day, consider the same thing. it
+needs to be slightly less complex. Then we get to the next category, the last
+category, which I've just titled ancillary exercises. Now, none of these titles
+are official. It's just the way that I like to categorize these. Okay, so the
+ancillary exercises, what I use here is a lowcost exercise. So, it's low cost of
+fatigue. And things that we can consider is firstly, what I usually consider is
+prioritizing joint health. So if you ever write a program and you think of you
+know what are your favorite rotator cuff exercises or core work or small muscle
+groups like that this is the time at the end of the session. So one category is
+joint health exercise. The next category is lowcost feelood exercises Brett
+Contras. So he talks about his experience with coaching females. So if you don't
+know who he is he specializes in training glutes and it just so happens that it's
+a much more popular muscle group amongst the females. So majority of his audience
+are females and he trains a lot of fitness models and stage models that have very
+well-developed glutes. And he talks about the art of coaching as well as the
+science. So from a science standpoint, he has a PhD. That's the highest accolade
+you can achieve in the world of academia. So science, he understands it. Yet he
+talks a lot about the art of coaching coming from real world experience. He still
+works with he owns a gym and he coaches women every day. That's what he does. And
+he talks a lot about something that I absolutely agree with the need for
+factoring in training morale and having the people that you're working with enjoy
+the work that they are doing. And same with yourself. If you're following a
+program, you know, enjoying the work that you do is going to allow you to apply
+more effort and therefore achieve a superior outcome than if you come into the
+session hate the exercise, give it a halfass effort and therefore get a lesser
+return on investment. Okay? So enjoying what you do. Now he talks about
+strategies such as performing a lowcost feelood exercise for the glutes like
+giving them like a frog pump at the end of the day. high rep, low load frog pump
+or that's just one example of exercises. Uh there's other exercises, the Hello
+Boys, I don't know what you call them. Good girl, bad girl, I don't know what you
+call them. The adductor abductor machine. Um you know, low cost of fatigue, but
+you do a high rep set and you're going to have um a lot of pump in the muscle.
+You're going to feel great about yourself walking out of the session with a big
+juicy butt pump. That doesn't sound right, but anyway, you know what I'm saying.
+Same applies for if you want to achieve the same goal with a big juicy bicep pump
+or a big juicy calf pump. These are lowcost feelood exercises if that's your
+goal. So bicep curls, calf raises, if I do a ton of those at the end of the
+session, what I need to consider is is that going to interfere with my energy
+levels for tomorrow's session? And if it's a an exercise that's usually like an
+isolation exercise, the answer is typically no. So, it needs to be a lowcost
+feelood exercise rather than, let's just say you say, "My favorite exercise of
+the day is a deadlift." I'm going to recommend you don't use that at the end of
+the session just because you feel good. It's not a lowcost feelood exercise.
+Winston, you warm up hamstrings before the squat. Is this considered a warmup or
+an ancillary exercise? I don't always warm up the hamstrings before a squat.
+Sometimes I do. Um, and I wouldn't consider it an ancillary exercise. And in
+fact, talking about any warm-up exercise, I don't count that with total training
+volume because as a warm-up, I typically don't perform it at a close enough
+proximity to fail to deem it effective. I certainly don't apply the principle of
+progressive overload to my warm-up exercise. So, what I mean by that, and this is
+a mistake that a lot of people make. If I say things like, "Do you train calves?
+Do you train abs? Do you train, you know, shoulder health muscles like rotator
+cuff, the external rotators of your shoulder? And the common answer is, yeah, you
+know, I'll do the big three, the McGill big three for my core. So, I do that as a
+warm-up. So, therefore, yes, I do train core. Uh, wrong answer. You warm up your
+core, but that's not enough stimulus to achieve a positive outcome to achieve
+meaningful gains. Right? Same with the people who do these external rotation
+exercises on a band to warm up their shoulders. If I say to them, do you
+strengthen your external rotators? And they say, yes, I do. I do this as warm-up.
+Then the answer is no. You don't train them because you're not applying the
+principle of progressive overload. It's not counted to the volume that I'm
+actually counting that will contribute to you achieving meaningful gains. Okay.
+So, uh let's read this out. So, low cost of fatigue. I prioritize joint health.
+So, in my session, I typically don't just accumulate extra volume because I need
+to feel good about a juicy glute pump or whatever it is. I walk out of the
+session feeling like, okay, good. I've done my prehab stuff, my ancillary joint
+health work. I know that that's going to contribute to my strength game, but
+that's just the way that I feel. Now, here's I'm going to play devil's advocate
+on myself. Who's to say that the primary work isn't good joint health exercise.
+All right? So, building big pecs, building big lats, building I shouldn't just
+say big, strong pecs, strong lats, strong romboids, strong delts. Who's to say
+that's not a effective joint health exercise? Because actually it is. They are
+important. so strong. Every muscle has a carryover effect to good joint health.
+Which is where you can say your lowcost feel-good exercises, your party pump for
+your glutes, your calves, your biceps, your triceps, or whatever it may be, a
+dumbbell lateral raise finisher for the day to walk out of the session with
+massive juicy delts. That's a joint health exercise arguably, but it must be low
+cost. So therefore, if in doubt, if you don't understand what's low cost and high
+cost, isolation exercises is a pretty good start. Okay, compound, which means
+multiple joints. So, accumulating more volume on compound exercises will most
+likely contribute to more fatigue that may interfere with the next day session.
+Now, let's talk a little bit about exercise redundancy. Okay, so these here's a
+definition that you guys can keep. Two exercises can both be effective in
+isolation but unnecessary together. For example, performing a flat dumbbell press
+and a flat barbell press within the same session. is loading the same structures
+in practically the same way. Both are great exercises, but performing them
+together is an example of exercise redundancy. Exercise redundancy is where you
+include multiple exercises in a program that train the same muscle in the same
+way through the same joint actions with the same resistance profile without
+adding any meaningful new stimulus. Good program isn't about cramming more
+exercises in. It's about choosing exercises that complement each other rather
+than overlap. I'm going to give you a ton of examples so you can have a better
+illustration of this. I'm also going to give you exceptions to this rule because
+sometimes I don't avoid exercise redundancy and I will choose exercises that are
+typically considered redundant with intention. Exceptions to the rule is fatigue
+management usually with advanced lifters. What do I mean by this? In this context,
+specificity becomes the priority. So, this is usually as an advanced lifter
+approaches competition. So, not all year round. Whenever I say advanced lifters,
+typically I'm talking about high absolute strength athletes. Okay? So, you've got
+elite athletes that are have a high relative strength. So, usually a lot of the
+50 kg weight classes and below, usually females. This isn't a huge concern
+because they may have a high relative strength, which means they may be able to
+deadlift triple body weight as a 50 kg lifter. That's outstanding. I work with
+some elite lifters that do that 150 kg deadlift for a 50 kg girl, woman, whatever.
+Get offended if you like. However, they usually are able to do heavy deadlifts
+within the same week. Whereas you get a male that's 100 kilograms doing triple
+body weightight deadlift would not be able to repeat that effort with the same
+degree of energy multiple times per week and in many instances need to spread
+that out over the fortnight. So my highest level deadlifters will only deadlift
+heavy every fortnight. They deadlift every week but it goes heavy session, light
+session, heavy session, light session. The idea of the light session is to
+maintain the skill. So maintain practice of that movement. So instead of just
+saying why don't we just do it every fortnite well because you know frequency of
+a minimum of weekly for any of these exercises allows us to maintain the skill of
+the movement which is also important. So back to this talking about the exception
+to the rule is typically discussing advanced high absolute strength athletes
+especially approaching competition peak time. So the competition movement must be
+trained heavy to maintain technical precision and performance readiness. These
+lifts are highly loadable and therefore highly fatiguing. So talk about a
+powerlifter as an example performing an exercise like a low bar squat working up
+to one rep max. Same with a heavy arch bench press especially with the stronger
+athletes and most specifically the conventional deadlift. These are the most
+fatiguing exercises that we have. So with my highle lifters, they need to be
+exposing themselves to a weekly frequency of these movements to maintain the
+skill. However, if they are performing enough volume of those movements to build
+or even at the very least maintain muscle mass and strength, they may be
+accumulating a little bit too much fatigue, which is where I will have separate
+strategies such as a top set back down set method where we're only doing, you
+know, a low exposure, one to two top sets of that specific movement under heavy
+loads. And then the secondary exercise I will choose a variation that's not as
+loadable and therefore not as fatiguing but can be considered redundant because
+it targets that muscle group and joint action in the exact same way. However, the
+reason why it's not redundant is because we haven't performed as much volume as
+necessary to progress on that exercise. Okay, I'm going to elaborate on this as we
+go. Hope you're understanding. Okay, so back to the definition as written on the
+slide. Performing enough total volume of the exact competition lifts to build or
+even maintain muscle would exceed the lifter's recovery capacity. The solution is
+to limit the lifter's exposure to the primary lift while accumulating additional
+volume through closely related variations. Although these variations may appear
+redundant, they allow continued stimulus to the same movement pattern with a
+lower fatigue cost. So this is where we enter the top set plus variation model. So
+you may have heard me talk about the top set back down set method which is another
+strategy. I'm just giving you guys the example of where I avoid the rule of
+avoiding exercise redundancy. Okay. So this is not exercise redundancy because
+it's the same exercise. So that's top set back down set. But a lot of the times
+when I do a top set back down set method, I perform the top set and the back down
+set method I accumulate more volume of the movement but I intentionally reduce the
+effort so that it's not fatiguing. When I do a top set and variation model, I
+don't have to reduce the effort. By default, it's a harder exercise to load. So,
+I can still train it at a high effort, but because it's hard to load, it's not
+that heavy, it's also not fatiguing. Slightly different strategy. If I'm confusing
+anyone, please let me know. Examples. Okay. Okay. And the first example that comes
+to my mind is one that I'm using currently on Halfthor Bjornson who I'm coaching
+to deadlift 515 kg at the enhanced games on May 24. So he's currently about I
+believe it's 14 weeks out. And right now he only gets because he's so damn strong
+from now he's like our strategy is to not deadlift heavy more than once a
+fortnite. is not script deficit deadlift and this has been in my programs since I
+started working with Sebastian you know so therefore 14 weeks and even back when
+it was 16 weeks so this is when this specific program started 16 weeks out only
+gives him eight total exposures to a heavy deadlift because if we so that means
+fortnightly heavy deadlifts which means if we deadlifted heavy every week he's so
+damn strong that it's so heavy therefore so fatiguing he won't be able to recover
+from it. So it sounds like eight 16 weeks or 14 weeks is a long time but have that
+that's the amount of exposures we get to that heavy lift and right now the
+strategy is heavy single so one set of one and then two sets of five of a snatch
+grip deadlift from a deficit. Now to add context to this, his next heavy deadlift
+session is 410 kg and the weights that he's doing snatch grip deadlifts on is, you
+know, between 230 to 260 kg. So it's significantly less. It's about 60%. However,
+I will tell you now, even the world's strongest deadlifter finds those weights on
+the snap trip deadlift from a deficit challenging. They're hard to do. But because
+the absolute load is quite low, they produce less systemic fatigue. You're working
+as hard but it's a lighter weight, so it's not as fatiguing on the body and it's
+the body is able to recover from this stimulus a lot quicker than the more
+loadable option, which is the straight up conventional deadlift. Other examples
+with other lifts, the low bar squat using a back down of a paused or a one and a
+quarter squat. So these are exercises that target the movement. It's the same
+movement, but we've slowed it down. We've added a pause. we've added a one and a
+quarter and therefore decreased the loadability of the movement. So therefore due
+to the decreased load it has decreased the fatigue competition bench press
+especially with the super strong bench presses. So this is where you know your
+5x5s it sounds like a nice idea however that can be too much load too much volume
+for the strong lifter to be able to recover from. Sounds like a strength stimulus,
+but this is a high volume phase for an elite bench presser. So therefore, I would
+do a top set of a bench press, whatever the rep range, it's usually kind of
+strength rep ranges. So that means less than five or less than six, 80% plus of
+your 1 RM. I'd do one set, maybe two, probably still one. And then I'll do back
+down work on exercises like a pause spotto bench press or even flat dumbbell
+press. So, it's training the movement the exact same way. Seemingly redundant
+exercise, but because we didn't accumulate enough volume on the top sets, it's not
+enough work to progress in strength or even at the very least maintain strength or
+muscle mass. Okay? So, the strategy here is to maintain specificity, accumulate
+volume, and manage fatigue. Now, let's have a look at the eight category model for
+structural balance. [... 8-category model walkthrough: horizontal/vertical push
+and pull, knee-dominant vs hip-dominant squat, hip hinge, isolation/joint-health;
+worked squat / bench / deadlift day examples avoiding redundancy; rectus femoris
+→ leg extension; short head of biceps femoris → leg curl/Nordic; hip thrust =
+shortened glute vs snatch-grip/deficit = lengthened glute; loadability per
+movement profile; flared bench / stiletto squat / knees-over-toes NOT for 1RM;
+pec tear at full stretch. Then the peaking example: low-bar squat 1x1 + 2x4 paused
+back-down, conv DL + 2x4 pause deficit, comp bench 1x1 + pause spoto back-down;
+4-week peak phase because >4wk of big volume reduction risks detraining. Plus a
+hypertrophy day example. Full structural-balance detail is in the spoken video.]
+Anyhow, I hope this all makes sense, my lovely team. There's two free programs for
+you. This is a beautiful peaking day. This is a beautiful hypertrophy phase. Follow
+it. All right, my team. Love you all. Thank you. Appreciate you. Have an amazing
+day.
