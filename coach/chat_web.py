@@ -32,7 +32,7 @@ STATE_PATH = os.path.join("data", "state.json")
 
 def _looks_like_trace(text: str) -> bool:
     markers = ("[PERCEIVE", "[REASON", "[GUARD", "[DECIDE", "[ACT",
-               "Block:", "Lifter:", "Training maxes:")
+               "Block:", "Lifter:", "Estimated training maxes:")
     return any(m in text for m in markers)
 
 
@@ -82,7 +82,8 @@ def _week_rows(state: dict, week: int, in_deload: bool = False) -> list[dict]:
                 "Day": day_label,
                 "Exercise": ex["name"],
                 "Role": ex.get("role", "primary"),
-                "Sets × Reps": f"{c['sets']} × {c['reps']}",
+                "Sets × Reps": blocks.format_sets_reps(
+                    ex["name"], c["sets"], c["reps"]),
                 "Weight": wt_str,
                 "% TM": pct_str,
                 "RPE": c["rpe_cap"],
@@ -146,7 +147,7 @@ def _sidebar(chat: Chat) -> None:
                        "diagnose and propose one.")
         sb.markdown(f"readiness: `{s['readiness']}`")
         sb.divider()
-        sb.markdown("**Training maxes (kg)**")
+        sb.markdown("**Estimated training maxes (kg)**")
         for lift in ("squat", "bench", "deadlift"):
             tm = s["lifts"][lift]["training_max"]
             sb.markdown(f"- {lift}: `{tm}`")
@@ -234,7 +235,8 @@ def _render_day_card(state: dict, day: dict, block_type: str,
                 with col_left:
                     st.markdown(
                         f"&nbsp;&nbsp;&nbsp;&nbsp;{ex['name']} &nbsp;—&nbsp; "
-                        f"{c['sets']} × {c['reps']} {load_str}",
+                        f"{blocks.format_sets_reps(ex['name'], c['sets'], c['reps'])} "
+                        f"{load_str}",
                         unsafe_allow_html=True,
                     )
                 with col_right:

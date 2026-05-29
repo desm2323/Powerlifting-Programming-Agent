@@ -382,17 +382,40 @@ def _tool_record_lifter_context(agent, bodyweight_kg: float | None = None,
 
 def _tool_propose_block(agent, block_type: str, duration_weeks: int,
                         rationale: str, weekly_plan: dict,
-                        focus_lifts: list[str] | None = None) -> dict:
+                        focus_lifts: list[str] | None = None,
+                        replace_active: bool = False,
+                        override_season_plan: bool = False,
+                        **_ignored) -> dict:
+    # replace_active / override_season_plan are forwarded to commit_block (the
+    # prompt instructs the LLM to pass replace_active=True when revising a
+    # block). **_ignored swallows any stray kwarg the model invents, so a
+    # tool/prompt mismatch can never crash the ReAct loop into a retry storm.
     if agent is None:
         return {"error": "agent not available — stateful tool"}
     return agent.commit_block(block_type, duration_weeks, rationale,
-                              focus_lifts or [], weekly_plan=weekly_plan)
+                              focus_lifts or [], weekly_plan=weekly_plan,
+                              replace_active=bool(replace_active),
+                              override_season_plan=bool(override_season_plan))
 
 
 def _tool_review_current_block(agent, outcome: str) -> dict:
     if agent is None:
         return {"error": "agent not available — stateful tool"}
     return agent.archive_current_block(outcome)
+
+
+def _tool_adjust_lift_load(agent, lift: str, felt_rpe: float,
+                           prescribed_rpe: float | None = None,
+                           **_ignored) -> dict:
+    if agent is None:
+        return {"error": "agent not available — stateful tool"}
+    return agent.adjust_lift_load(lift, felt_rpe, prescribed_rpe)
+
+
+def _tool_advance_block_week(agent, **_ignored) -> dict:
+    if agent is None:
+        return {"error": "agent not available — stateful tool"}
+    return agent.advance_block_week()
 
 
 def _tool_get_season_plan(state: dict) -> dict:
@@ -825,6 +848,10 @@ TOOL_SCHEMAS = [
                 "items": {"type": "string",
                           "enum": ["squat", "bench", "deadlift"]},
                 "description": "Lifts getting extra volume / priority."},
+            "replace_active": {"type": "boolean",
+                "description": "Set true to REVISE/REPLACE the current block "
+                               "(e.g. the lifter asked to redesign it). Leave "
+                               "false/absent for a brand-new block."},
             "weekly_plan": {
                 "type": "object",
                 "description": "The weekly schedule — list of days. "
@@ -883,6 +910,36 @@ TOOL_SCHEMAS = [
      "input_schema": {"type": "object",
                       "properties": {"outcome": {"type": "string"}},
                       "required": ["outcome"]}},
+    {"name": "adjust_lift_load",
+     "description": (
+         "UPDATE THE PLAN FROM FEEDBACK — use this (NOT propose_block) when "
+         "the lifter says a session/week felt LIGHTER or HEAVIER than the "
+         "prescribed RPE on an ACTIVE block. The engine nudges that lift's "
+         "working 1RM in place (every load follows) and keeps the SAME block. "
+         "Pass the lift and the RPE the top set actually FELT like; optionally "
+         "the prescribed RPE (else the engine uses this week's target). "
+         "Examples: 'squat felt like RPE 7 but was meant to be 8' -> "
+         "adjust_lift_load(lift='squat', felt_rpe=7); 'bench was way too "
+         "heavy, more like a 9.5' -> adjust_lift_load(lift='bench', "
+         "felt_rpe=9.5). The engine computes the kg change (~2.5kg per RPE "
+         "point, capped); report the new top-set weight it returns."),
+     "input_schema": {"type": "object",
+                      "properties": {
+                          "lift": {"type": "string",
+                                   "enum": ["squat", "bench", "deadlift"]},
+                          "felt_rpe": {"type": "number",
+                              "description": "RPE the top set actually felt like."},
+                          "prescribed_rpe": {"type": "number",
+                              "description": "Optional: the RPE it was meant to "
+                                             "be. Omit to use this week's target."}},
+                      "required": ["lift", "felt_rpe"]}},
+    {"name": "advance_block_week",
+     "description": (
+         "Move the ACTIVE block to its next week (keeps the same block). Use "
+         "when the lifter is happy with a week and wants to move on ('felt "
+         "good, on to next week'). After the last productive week it rolls "
+         "into the deload. Do NOT propose_block for this."),
+     "input_schema": {"type": "object", "properties": {}}},
 
     # --- macrocycle (season plan) tools -----------------------------------
     {"name": "get_season_plan",
@@ -1414,6 +1471,10 @@ def dispatch_tool(state: dict, name: str, args: dict, agent=None) -> dict:
             return _tool_propose_block(agent, **args)
         if name == "review_current_block":
             return _tool_review_current_block(agent, **args)
+        if name == "adjust_lift_load":
+            return _tool_adjust_lift_load(agent, **args)
+        if name == "advance_block_week":
+            return _tool_advance_block_week(agent, **args)
         if name == "get_season_plan":
             return _tool_get_season_plan(state)
         if name == "propose_season":
@@ -1731,7 +1792,36 @@ COACH_SYSTEM = (
 
     "MODE 3 — ACTIVE BLOCK (active_block exists)\n"
     "  Normal coaching: answer questions, diagnose sticking points. The engine "
-    "  handles weekly waves and deloads automatically — don't override.\n\n"
+    "  handles weekly waves and deloads automatically — don't override.\n"
+    "  UPDATE FROM FEEDBACK — DON'T REBUILD: when the lifter reports how a "
+    "  session/week FELT on an ACTIVE block, adjust the block IN PLACE. NEVER "
+    "  call propose_block / review_current_block for this — rebuilding the "
+    "  block is wrong and loses their progress. Route by what they say:\n"
+    "    - 'felt light / too easy / the RPE was LOWER than the target' -> call "
+    "      adjust_lift_load(lift, felt_rpe) — engine bumps that lift's load UP "
+    "      and keeps the same block. Report the new top-set weight it returns.\n"
+    "    - 'felt heavy / too hard / the RPE was HIGHER' -> "
+    "      adjust_lift_load(lift, felt_rpe) — engine bumps it DOWN.\n"
+    "    - 'felt good / about the right RPE — move on / next week' -> call "
+    "      advance_block_week (NO load change).\n"
+    "    - both ('it was light, bump it and move on') -> adjust_lift_load "
+    "      THEN advance_block_week.\n"
+    "    - feedback with no lift named ('this week felt easy') -> ask which "
+    "      lift, or adjust the lift they mention. The engine does the kg math "
+    "      (~2.5kg per RPE point); you only pass the felt RPE.\n"
+    "    - GAUGE THE WHOLE WEEK: if they mention only ONE lift ('squat felt "
+    "      light'), adjust that lift, then ASK how the OTHER primary lifts AND "
+    "      the secondary/variation days felt this week before wrapping up — "
+    "      and adjust each off-target lift with its own adjust_lift_load call. "
+    "      Don't silently change only the one lift they happened to name.\n"
+    "    - FORWARD-LOOKING (don't touch a completed session): feedback on a "
+    "      week the lifter ALREADY did changes the UPCOMING weeks, not the "
+    "      session just performed. Call advance_block_week to lock in the "
+    "      finished week, THEN adjust — so the change lands on the next week. "
+    "      Say so: 'bumped your squat from next week onward; this week stays "
+    "      as you did it.'\n"
+    "  Only propose_block (replace_active=true) when they EXPLICITLY ask to "
+    "  REDESIGN the block or add a NEW weakness — never for 'how it felt'.\n\n"
 
     "EFFICIENCY (very important — slow responses break the UX):\n"
     "- DO NOT call calculate_load or get_training_max while building "

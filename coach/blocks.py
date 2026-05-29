@@ -16,7 +16,16 @@ catalogue it picks from — the knowledge base.
 from __future__ import annotations
 
 from . import loading
-from .expert_knowledge import is_rpe_only_accessory
+from .expert_knowledge import is_rpe_only_accessory, is_time_based_exercise
+
+
+def format_sets_reps(name: str, sets: int, reps: int) -> str:
+    """Render the sets x reps prescription. Time-based movements (carries,
+    holds, planks) show their duration in seconds — '3 x 30s' — instead of a
+    meaningless rep count like '3 x 30'."""
+    if is_time_based_exercise(name):
+        return f"{sets} × {reps}s"
+    return f"{sets} × {reps}"
 
 BLOCK_TYPES = {
     "volume": {

@@ -1034,6 +1034,22 @@ def is_rpe_only_accessory(name: str) -> bool:
     return any(tok in n for tok in RPE_ONLY_ACCESSORY_TOKENS)
 
 
+# Movements measured by TIME (a held duration) rather than reps — carries,
+# holds, planks, dead hangs. Their prescription's "reps" field is a number of
+# SECONDS, so the UI renders e.g. "3 x 30s" instead of a nonsensical "3 x 30".
+TIME_BASED_TOKENS = (
+    "carry", "carries", "farmer", "suitcase", "yoke", "hold", "plank",
+    "dead hang", "hang from", "for time", "loaded carry", "march",
+)
+
+
+def is_time_based_exercise(name: str) -> bool:
+    """True if the movement is performed for a DURATION (seconds) rather than
+    counted reps — carries, holds, planks, hangs. Substring, case-insensitive."""
+    n = (name or "").lower().strip()
+    return any(tok in n for tok in TIME_BASED_TOKENS)
+
+
 # ===========================================================================
 # SEBASTIAN OREB — exercise selection, redundancy, training splits, 5-step
 # periodization model. Citations: tjC6ilWMEMM (exercise selection & order),

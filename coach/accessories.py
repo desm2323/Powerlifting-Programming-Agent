@@ -80,7 +80,7 @@ ACCESSORIES: dict[str, dict[str, list[dict]]] = {
              "rationale": "Isolates the quads (incl. rectus femoris) the squat under-trains."},
         ],
         "weak_core": [
-            {"name": "Weighted carry", "intensity_pct": 0.0, "sets": 3, "reps": 1,
+            {"name": "Weighted carry", "intensity_pct": 0.0, "sets": 3, "reps": 30,
              "rationale": "Loadable trunk/bracing stability under load."},
             {"name": "Hanging leg raise", "intensity_pct": 0.0, "sets": 3, "reps": 12,
              "rationale": "Loadable anterior-core work that progresses (unlike planks)."},
@@ -112,11 +112,11 @@ ACCESSORIES: dict[str, dict[str, list[dict]]] = {
              "rationale": "Posterior-chain builder — lockout is hip-extension-limited."},
         ],
         "grip": [
-            {"name": "Farmer's carry", "intensity_pct": 0.0, "sets": 3, "reps": 1,
+            {"name": "Farmer's carry", "intensity_pct": 0.0, "sets": 3, "reps": 30,
              "rationale": "Heavy loaded carry — direct grip + trunk endurance."},
-            {"name": "Plate pinch", "intensity_pct": 0.0, "sets": 3, "reps": 1,
+            {"name": "Plate pinch", "intensity_pct": 0.0, "sets": 3, "reps": 30,
              "rationale": "Targets pinch / thumb grip the bar doesn't fully tax."},
-            {"name": "Heavy barbell hold", "intensity_pct": 0.90, "sets": 3, "reps": 1,
+            {"name": "Heavy barbell hold", "intensity_pct": 0.90, "sets": 3, "reps": 20,
              "rationale": "Overload hold at/above pulling weight for grip carryover."},
         ],
         "lower_back": [

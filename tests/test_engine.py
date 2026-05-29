@@ -1017,6 +1017,23 @@ def test_blocks_all_four_types_defined():
         assert dl["weekly_set_target"] < rx["weekly_set_target"]
 
 
+def test_is_time_based_exercise():
+    assert expert_knowledge.is_time_based_exercise("Farmer's carry")
+    assert expert_knowledge.is_time_based_exercise("Suitcase carry")
+    assert expert_knowledge.is_time_based_exercise("Weighted plank")
+    assert expert_knowledge.is_time_based_exercise("Heavy barbell hold")
+    assert not expert_knowledge.is_time_based_exercise("Squat")
+    assert not expert_knowledge.is_time_based_exercise("Leg curl")
+
+
+def test_format_sets_reps_time_vs_reps():
+    """Time-based movements show a duration (seconds); rep movements don't."""
+    assert blocks.format_sets_reps("Farmer's carry", 3, 30) == "3 × 30s"
+    assert blocks.format_sets_reps("Heavy barbell hold", 3, 20) == "3 × 20s"
+    assert blocks.format_sets_reps("Squat", 4, 5) == "4 × 5"
+    assert blocks.format_sets_reps("Leg press", 3, 10) == "3 × 10"
+
+
 def test_blocks_top_set_climbs_to_heavy_finish():
     """The heavy TOP SET (1 set) must climb across the block to a genuinely
     heavy finish — week 4 of a 4-week strength block is heavier than week 1,
@@ -1817,6 +1834,66 @@ def test_react_tool_list_block_types():
     assert len(out["block_types"]) == 4
     types = {b["type"] for b in out["block_types"]}
     assert types == {"volume", "technique", "strength", "peaking"}
+
+
+def test_propose_block_tool_accepts_replace_active_and_stray_kwargs():
+    """The prompt tells the LLM to pass replace_active=True when revising a
+    block — the tool MUST accept it (and any stray kwarg) instead of raising
+    TypeError, which previously looped the ReAct budget to exhaustion."""
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = _new_agent(os.path.join(tmp, "s.json"), with_block=True)  # untrained volume
+        out = reasoning.dispatch_tool(
+            agent.state, "propose_block",
+            {"block_type": "strength", "duration_weeks": 4,
+             "rationale": "revise to strength", "focus_lifts": [],
+             "weekly_plan": {}, "replace_active": True,
+             "some_unknown_kwarg": 123},  # stray kwarg must NOT crash
+            agent=agent)
+        assert "committed" in out, out
+        assert agent.state["block"]["type"] == "strength"
+
+
+def test_adjust_lift_load_bumps_anchor_when_felt_easier():
+    """RPE-8 top set that felt like RPE 7 (easier) -> the engine bumps that
+    lift's anchor +2.5kg IN PLACE; the block is untouched (no rebuild)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = _new_agent(os.path.join(tmp, "s.json"), with_block=True)
+        tm0 = agent.state["lifts"]["squat"]["training_max"]
+        out = agent.adjust_lift_load("squat", felt_rpe=7, prescribed_rpe=8)
+        assert out["new_training_max"] == tm0 + 2.5
+        assert out["new_top_weight"] > out["old_top_weight"]
+        assert out["block_unchanged"] is True
+        assert agent.state["block"]["type"] == "volume"  # same block
+
+
+def test_adjust_lift_load_drops_anchor_when_felt_harder_capped():
+    """RPE-8 top set that felt like RPE 10 -> bump DOWN, capped at the squat
+    per-lift ceiling (5kg)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = _new_agent(os.path.join(tmp, "s.json"), with_block=True)
+        tm0 = agent.state["lifts"]["squat"]["training_max"]
+        out = agent.adjust_lift_load("squat", felt_rpe=10, prescribed_rpe=8)
+        assert out["new_training_max"] == tm0 - 5.0
+        assert out["new_top_weight"] < out["old_top_weight"]
+
+
+def test_adjust_lift_load_on_target_no_change():
+    """Felt about the prescribed RPE -> no load change (just move on)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = _new_agent(os.path.join(tmp, "s.json"), with_block=True)
+        out = agent.adjust_lift_load("bench", felt_rpe=8, prescribed_rpe=8)
+        assert out["kg_delta"] == 0
+        assert out["new_training_max"] == out["old_training_max"]
+
+
+def test_advance_block_week_keeps_block():
+    with tempfile.TemporaryDirectory() as tmp:
+        agent = _new_agent(os.path.join(tmp, "s.json"), with_block=True)
+        assert agent.state["block"]["week"] == 1
+        out = agent.advance_block_week()
+        assert out["advanced_to_week"] == 2
+        assert agent.state["block"]["week"] == 2
+        assert agent.state["block"]["type"] == "volume"
 
 
 def test_react_propose_block_via_tool_commits_state():

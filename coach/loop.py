@@ -585,8 +585,9 @@ class Agent:
                 pct = f"{int(c['intensity_pct']*100)}% TM" if tm else "BW/other"
                 role_tag = (f"[{ex['role']}]" if ex.get("role") and ex["role"] != "primary"
                             else "")
-                print(f"     - {ex['name']:28} {c['sets']}x{c['reps']} @ {wt:>9} "
-                      f"({pct}, RPE {c['rpe_cap']}) {role_tag}")
+                print(f"     - {ex['name']:28} "
+                      f"{blocks.format_sets_reps(ex['name'], c['sets'], c['reps'])} "
+                      f"@ {wt:>9} ({pct}, RPE {c['rpe_cap']}) {role_tag}")
                 if ex.get("rationale"):
                     print(f"         why: {ex['rationale']}")
             print()
@@ -716,6 +717,68 @@ class Agent:
             block["week"] += 1
             _trace("ACT", f"repeat load; advance to week {block['week']}")
 
+    # -- feedback-driven in-place adjustment (no new block) -------------------
+    def adjust_lift_load(self, lift: str, felt_rpe: float,
+                         prescribed_rpe: float | None = None) -> dict:
+        """Nudge a lift's working-1RM anchor based on how a session FELT vs the
+        prescribed top-set RPE — WITHOUT rebuilding the block. If the top set
+        was prescribed at RPE 8 but felt like RPE 7 (easier), the lifter is
+        stronger than the anchor assumed, so the anchor (and every load that
+        follows) climbs; if it felt like RPE 9 (harder), it drops.
+
+        kg delta = (prescribed - felt) * 2.5, capped at the per-lift ceiling.
+        This is the engine doing the math — the LLM only interprets the fuzzy
+        feedback into (lift, felt_rpe)."""
+        if lift not in self.state["lifts"]:
+            return {"error": f"unknown lift '{lift}'"}
+        block = self.state["block"]
+        if not block.get("type"):
+            return {"error": "no active block — nothing to adjust"}
+        week = block.get("week", 1)
+        reps, traj_rpe = blocks.top_set_for_week(
+            block["type"], week, duration_weeks=block.get("duration_weeks"),
+            readiness=self.state.get("readiness", 1.0))
+        if prescribed_rpe is None:
+            pend = self.state.get("pending_prescriptions", {}).get(lift)
+            prescribed_rpe = (pend.get("rpe_cap") if pend else None) or traj_rpe
+        tm = self.state["lifts"][lift]["training_max"]
+        cap = guardrails.TM_INCREASE_CAP.get(lift, 2.5)
+        raw = (float(prescribed_rpe) - float(felt_rpe)) * 2.5
+        delta = loading.round_to_increment(max(-cap, min(cap, raw)))
+        new_tm = max(20.0, loading.round_to_increment(tm + delta))
+        old_top = loading.load_for_rpe(tm, reps, prescribed_rpe)
+        self.state["lifts"][lift]["training_max"] = new_tm
+        self._compute_prescriptions([lift])
+        new_top = loading.load_for_rpe(new_tm, reps, prescribed_rpe)
+        self._save()
+        return {
+            "lift": lift, "prescribed_rpe": prescribed_rpe,
+            "felt_rpe": float(felt_rpe), "kg_delta": new_tm - tm,
+            "old_training_max": tm, "new_training_max": new_tm,
+            "old_top_weight": old_top, "new_top_weight": new_top,
+            "block_unchanged": True,
+        }
+
+    def advance_block_week(self) -> dict:
+        """Move the active block to its next week (or into the deload after the
+        last productive week). Keeps the same block — used when the lifter is
+        happy with a week and wants to move on."""
+        block = self.state["block"]
+        if not block.get("type"):
+            return {"error": "no active block"}
+        if block.get("in_deload"):
+            return {"info": "already on the deload week — this block is wrapping up"}
+        duration = block.get("duration_weeks") or 0
+        if duration and block["week"] >= duration:
+            block["in_deload"] = True
+            self.state["pending_prescriptions"] = {}
+            self._save()
+            return {"advanced_to": "deload", "from_week": block["week"]}
+        block["week"] += 1
+        self._compute_prescriptions()
+        self._save()
+        return {"advanced_to_week": block["week"], "duration_weeks": duration}
+
     # -- status ---------------------------------------------------------------
     def status(self):
         s = self.state
@@ -739,10 +802,10 @@ class Agent:
                 print(f"Focus:  {', '.join(b['focus_lifts'])}")
         else:
             print("Block:  none — chat with the coach to set one up.")
-        print("Training maxes:")
+        print("Estimated training maxes:")
         for lf in memory.LIFTS:
             d = s["lifts"][lf]
-            print(f"  {lf:9} TM {d['training_max']} kg  | est 1RM {d['best_est_1rm']} kg")
+            print(f"  {lf:9} est. TM {d['training_max']} kg  | est 1RM {d['best_est_1rm']} kg")
         if s["prs"]:
             print(f"PRs logged: {len(s['prs'])} (latest est 1RM "
                   f"{s['prs'][-1]['est_1rm']} kg on {s['prs'][-1]['lift']})")
