@@ -133,6 +133,9 @@ def validate_weekly_plan(plan: dict,
     # Weekday index each lift is trained on (for the consecutive-day check).
     lift_weekdays: dict[str, list[int | None]] = {
         "squat": [], "bench": [], "deadlift": []}
+    # Whether each lift has a PRIMARY session of the COMP LIFT itself (a plain
+    # squat/bench/deadlift, not a variation) — for the >=1-primary-per-lift rule.
+    comp_primary_seen = {"squat": False, "bench": False, "deadlift": False}
     # Collect ALL violations so the LLM fixes them in ONE retry, not one per
     # round-trip (each retry re-sends the whole prompt — expensive).
     errors: list[str] = []
@@ -220,6 +223,16 @@ def validate_weekly_plan(plan: dict,
         for lift in same_day_main_lifts:
             main_lift_session_counts[lift] += 1
             lift_weekdays[lift].append(day_weekday)
+        # A primary entry whose name is the PLAIN comp lift (starts with
+        # 'squat'/'bench'/'deadlift', e.g. 'Deadlift (top set)') is the lift's
+        # comp-lift primary. A variation (paused squat, block pull, close-grip
+        # bench) does NOT start with the lift name, so it doesn't count — this
+        # is robust even for variations the PQ-token list doesn't know.
+        for ex in exercises:
+            lf = ex.get("lift")
+            if (ex.get("role") == "primary" and lf in comp_primary_seen
+                    and (ex.get("name", "") or "").strip().lower().startswith(lf)):
+                comp_primary_seen[lf] = True
 
         # Rule 5a: RPE-only-named exercises (DB / cable / machine /
         # weighted pull-up / lateral raise / etc.) can't be tagged
@@ -419,6 +432,24 @@ def validate_weekly_plan(plan: dict,
                     f"squat, bench and deadlift; give the weak point one extra "
                     f"focused exposure (e.g. a secondary/tertiary day or the "
                     f"back-off on its primary day).")
+
+    # Rule 10: in a volume/strength/peaking block, each TRAINED lift needs at
+    # least one PRIMARY session of the COMP LIFT itself — a weakness variation
+    # (block pull, deficit, paused) SUPPLEMENTS the comp lift, it doesn't
+    # replace it. So a lift trained only through a variation / secondary work,
+    # with no primary conventional lift, is rejected. Technique blocks are
+    # exempt — pattern practice can centre on a variation (tempo / paused).
+    for lift in ("squat", "bench", "deadlift") if bt in (
+            "volume", "strength", "peaking") else ():
+        if main_lift_session_counts[lift] > 0 and not comp_primary_seen[lift]:
+            errors.append(
+                f"{lift} is trained only through variations / secondary work — "
+                f"there's no PRIMARY session of the competition {lift} itself. "
+                f"Add one primary {lift} day (the comp lift as role='primary', "
+                f"top set + back-off), and keep the weakness variation (e.g. "
+                f"block pull / deficit / paused) as that day's back-off or a "
+                f"secondary day. The variation supplements the comp lift; it "
+                f"doesn't replace it.")
 
     if not errors:
         return None

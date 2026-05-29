@@ -700,6 +700,38 @@ def test_validator_rejects_same_lift_sunday_monday_wrap():
     assert err is not None and "consecutive" in err.lower()
 
 
+def test_validator_requires_comp_lift_primary_not_only_variation():
+    """A weak-point variation must SUPPLEMENT the comp lift, not replace it:
+    deadlift trained only via a Block-pull primary (no conventional deadlift)
+    is rejected — each trained lift needs a primary session of the comp lift."""
+    plan = {"days": [
+        {"label": "Monday — Heavy Squat", "exercises": [
+            {"name": "Squat", "lift": "squat", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            *_generic_accessories("squat")]},
+        {"label": "Tuesday — Heavy Bench", "exercises": [
+            {"name": "Bench", "lift": "bench", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            *_generic_accessories("bench")]},
+        {"label": "Thursday — Deadlift Lockout", "exercises": [
+            {"name": "Block pull (2\" blocks)", "lift": "deadlift",
+             "role": "primary", "sets": 1, "reps": 3,
+             "intensity_pct": 0.90, "rpe_cap": 8},
+            *_generic_accessories("deadlift")]},
+    ]}
+    err = guardrails.validate_weekly_plan(plan, block_type="strength")
+    assert err is not None
+    # Specifically the comp-primary complaint (not just any deadlift mention).
+    assert "competition deadlift" in err.lower()
+    # Adding a real primary Deadlift (block pull stays as supplementary work)
+    # clears the comp-primary complaint.
+    plan["days"][2]["exercises"].insert(0, {
+        "name": "Deadlift", "lift": "deadlift", "role": "primary",
+        "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9})
+    err2 = guardrails.validate_weekly_plan(plan, block_type="strength") or ""
+    assert "competition deadlift" not in err2.lower()
+
+
 def test_validator_rejects_db_bench_as_primary():
     """A DB / cable / machine movement tagged role='primary' would have
     the engine compute a %TM load that's meaningless for a dumbbell.
