@@ -1242,13 +1242,13 @@ def test_blocks_rpe_clamped_to_safe_range():
     """rpe_cap must never exceed 10 (= failure) or drop below 5."""
     high_ex = {"name": "Squat", "lift": "squat", "role": "primary",
                "sets": 4, "reps": 3, "intensity_pct": 0.90, "rpe_cap": 9.8}
-    # Peak strength week adds rpe_delta=+0.5; 9.8+0.5=10.3 must clamp to 10.
+    # The computed RPE for any main-lift entry must never exceed 10 (= failure).
     out = blocks.compute_exercise_load(high_ex, 150, "strength", 4)
     assert out["rpe_cap"] <= 10.0
 
     low_ex = {"name": "Squat", "lift": "squat", "role": "primary",
               "sets": 4, "reps": 6, "intensity_pct": 0.65, "rpe_cap": 5.5}
-    # Volume wk1 has rpe_delta=-1.0; 5.5-1.0=4.5 must clamp to 5.0.
+    # The computed RPE must never drop below 5 (lower would be unprescribable).
     out = blocks.compute_exercise_load(low_ex, 150, "volume", 1)
     assert out["rpe_cap"] >= 5.0
 
@@ -1265,20 +1265,19 @@ def test_blocks_rpe_wave_skips_accessories():
 
 
 def test_blocks_accessory_preserves_prescribed_sets_reps():
-    """The wave (set_delta, rep_delta, intensity_mult) must apply ONLY to
-    primary/secondary main-lift work. An accessory's prescribed sets/reps
-    must survive any productive week unchanged — Ben's KB is explicit that
-    hypertrophy accessories stay 2-3x4-10 RPE 8-10 across the block.
+    """The week-to-week progression applies ONLY to primary/secondary main-lift
+    work. An accessory's prescribed sets/reps/intensity must survive any
+    productive week unchanged — Ben's KB is explicit that hypertrophy
+    accessories stay 2-3x4-10 RPE 8-10 across the block.
 
-    Uses a barbell accessory (RDL) here so the wave-scoping is the only
-    behavior under test — for DB / cable / machine accessories the RPE-only
-    normalizer additionally collapses intensity_pct to 0; that path has its
-    own tests below."""
+    Uses a barbell accessory (RDL) here so the accessory branch is the only
+    behavior under test — DB / cable / machine accessories additionally get
+    intensity_pct collapsed to 0 by the RPE-only normalizer (own tests below)."""
     accessory = {"name": "Romanian deadlift", "lift": "deadlift",
                  "role": "accessory",
                  "sets": 3, "reps": 8, "intensity_pct": 0.60, "rpe_cap": 8.0}
-    # Strength block week 4 ("Top sets") has set_delta=-1, rep_delta=-1,
-    # intensity_mult=1.04 — none of these should touch the RDL.
+    # Strength block, final productive week — the accessory branch must not
+    # rewrite its sets/reps/intensity to match the top set's trajectory.
     out = blocks.compute_exercise_load(accessory, 200, "strength", 4)
     assert out["sets"] == 3
     assert out["reps"] == 8
@@ -2913,9 +2912,10 @@ def test_propose_block_result_includes_start_date_summary():
 
 
 def test_commit_season_plan_preserves_competition_date_when_omitted():
-    """The real bug: LLM called propose_season twice — second call omitted
-    competition_date, which used to overwrite the existing one with None.
-    Now it MERGES: omitted (None) values preserve what was already set."""
+    """commit_season_plan MERGES: a follow-up call that adjusts only the
+    block sequence (and omits competition_date) must NOT overwrite the
+    existing meet date with None. Omitted scalar fields preserve their
+    previous value; the blocks list always replaces."""
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path)

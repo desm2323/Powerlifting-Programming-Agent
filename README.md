@@ -48,7 +48,7 @@ picks a weight.**
    |   sessions,   landmarks,     math,      MRV ceiling,   REASON ->     |
    |   PRs, block  accessories,   plates,    weekly-plan    GUARD ->      |
    |   history,    expert KB      RPE        validator,     DECIDE ->     |
-   |   chat log)   from Ben)      model)     scope filter)  ACT)          |
+   |   chat log)   tri-source)    model)     scope filter)  ACT)          |
    +-----------------------------------+-----------------------------------+
                                        |
                               Plan + adjustment
@@ -60,7 +60,7 @@ picks a weight.**
 |-----|--------|----------------|
 | Reasoning | `coach/reasoning.py` | LLM agent / ReAct reason → act with typed tools |
 | Memory | `coach/memory.py`, `coach/readiness.py` | short- and long-term memory; state estimation |
-| Knowledge | `coach/blocks.py`, `coach/landmarks.py`, `coach/accessories.py`, `coach/expert_knowledge.py` | knowledge base (block types, volume landmarks, accessory catalog, Ben Johnson KB) |
+| Knowledge | `coach/blocks.py`, `coach/landmarks.py`, `coach/accessories.py`, `coach/expert_knowledge.py` | knowledge base (block types, volume landmarks, accessory catalog, tri-source coaching KB) |
 | Tools | `coach/loading.py` | tool use / code execution (Program-of-Thoughts) |
 | Guardrails | `coach/guardrails.py` | policy adherence / safety |
 | Loop | `coach/loop.py` | PAGE perceive → reason → act cycle |
@@ -127,6 +127,9 @@ python main.py ask --trace "is bench frequency too low for my lifter profile?"
 python main.py chat
 # you> just squatted 130x3 RPE 9, felt heavy
 # you> what should I do today?
+# you> week 1 felt light, the RPE 7 squat felt more like 5
+#      (the engine nudges your working 1RM up ~2.5 kg per RPE point
+#       and advances the week — same block, future weeks adjust)
 # you> exit
 ```
 

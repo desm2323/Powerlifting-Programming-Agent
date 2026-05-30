@@ -9,7 +9,7 @@ The LLM's ONLY jobs are the things it's actually good at:
 
 It never picks weights — those come from coach/loading.py.
 
-If no API key (or the `anthropic` package) is available, every function falls
+If no API key (or the `openai` package) is available, every function falls
 back to a deterministic heuristic so the agent still runs offline. That keeps
 demos reproducible and reinforces the architecture: the LLM is enrichment on
 top of a self-sufficient engine.
@@ -35,7 +35,7 @@ MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
 
 def _tools_to_openai(schemas: list) -> list:
-    """Convert internal Anthropic-style tool schemas into OpenAI's format."""
+    """Convert the internal tool schemas into OpenAI's function-tool format."""
     out = []
     for s in schemas:
         params = s.get("input_schema") or {"type": "object", "properties": {}}

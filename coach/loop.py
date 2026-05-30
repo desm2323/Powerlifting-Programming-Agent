@@ -476,11 +476,9 @@ class Agent:
         Specifically: `blocks` is always treated as the new full upcoming
         list (replaces what was there). But `competition_date` and
         `competition_lifts` only update when supplied — passing None keeps
-        the existing value. This stops the LLM from accidentally moving
-        the meet date when it calls propose_season again to adjust the
-        block sequence (real bug: meet drifted Oct 12 → Nov 27 between
-        two consecutive propose_season calls because the LLM omitted the
-        date the second time and we used to overwrite with None).
+        the existing value, so a follow-up propose_season call that adjusts
+        the block sequence without restating the meet date can't accidentally
+        move the meet.
         """
         cleaned: list[dict] = []
         for i, entry in enumerate(blocks or []):
