@@ -418,6 +418,69 @@ def _tool_advance_block_week(agent, **_ignored) -> dict:
     return agent.advance_block_week()
 
 
+def _tool_log_session(agent, lift: str, weight: float | None = None,
+                     reps: int | None = None,
+                     rpe: float | None = None, notes: str = "",
+                     **_ignored) -> dict:
+    """Log a completed session through the FULL agent loop. Drives
+    interpret_feedback, readiness update, the progression policy
+    (rule or bandit), guardrails, PR detection, and persistence —
+    everything `python main.py log` does, but reachable from chat so
+    natural-language session descriptions ('squat felt brutal, got 3 @
+    RPE 9.5', 'first week squat felt heavy at RPE 8') don't bypass
+    autoregulation in favour of a one-shot TM nudge.
+
+    weight and reps are OPTIONAL — if omitted, they default to the lift's
+    pending_prescription (top_weight + reps). That's because most "felt
+    X" feedback implicitly means "I did the prescription as written, but
+    it felt like RPE X" — the lifter doesn't restate the kg they just
+    saw on screen. Defaulting from the prescription lets THESE messages
+    feed the policy/bandit too, instead of dead-ending at
+    adjust_lift_load."""
+    if agent is None:
+        return {"error": "agent not available — stateful tool"}
+    if lift not in agent.state.get("lifts", {}):
+        return {"error": f"unknown lift '{lift}'"}
+    if not agent.state["block"].get("type"):
+        return {"error": ("no active block — log_session needs a committed "
+                          "block to evaluate against. Call propose_block "
+                          "first, or chat with the lifter to set one up.")}
+    pending = agent.state.get("pending_prescriptions", {}).get(lift, {})
+    if weight is None:
+        weight = pending.get("top_weight")
+    if reps is None:
+        reps = pending.get("reps")
+    if weight is None or reps is None:
+        return {"error": (
+            f"need explicit weight + reps for {lift} — no pending "
+            f"prescription is on file to default from. Ask the lifter for "
+            f"the kg they lifted and the rep count they actually performed, "
+            f"then call log_session again.")}
+    # log_session writes the labelled PERCEIVE/REASON/GUARD/POLICY/DECIDE/
+    # ACT trace via print(). chat_web.py captures stdout around the LLM
+    # call, so the labelled trace shows up in the UI without any extra
+    # work here.
+    agent.log_session(lift, float(weight), int(reps), rpe, notes or "")
+    block = agent.state.get("block", {})
+    lift_state = agent.state["lifts"][lift]
+    pending = agent.state.get("pending_decisions", {}).get(lift)
+    last_session = (agent.state.get("sessions") or [])[-1]
+    return {
+        "logged": {"lift": lift, "weight": float(weight),
+                   "reps": int(reps), "rpe": rpe, "notes": notes or ""},
+        "effective_rpe": last_session.get("effective_rpe"),
+        "missed_reps": last_session.get("missed_reps"),
+        "sticking_point": last_session.get("sticking_point"),
+        "readiness": agent.state.get("readiness"),
+        "training_max": lift_state.get("training_max"),
+        "best_est_1rm": lift_state.get("best_est_1rm"),
+        "block_week": block.get("week"),
+        "in_deload": block.get("in_deload", False),
+        "consecutive_overreach": block.get("consecutive_overreach", 0),
+        "pending_decision_action": pending.get("action") if pending else None,
+    }
+
+
 def _tool_get_season_plan(state: dict) -> dict:
     """Return the macrocycle: competition date, target lifts, and the
     ordered list of UPCOMING blocks. Past blocks live in block_history."""
@@ -912,17 +975,25 @@ TOOL_SCHEMAS = [
                       "required": ["outcome"]}},
     {"name": "adjust_lift_load",
      "description": (
-         "UPDATE THE PLAN FROM FEEDBACK — use this (NOT propose_block) when "
-         "the lifter says a session/week felt LIGHTER or HEAVIER than the "
-         "prescribed RPE on an ACTIVE block. The engine nudges that lift's "
-         "working 1RM in place (every load follows) and keeps the SAME block. "
-         "Pass the lift and the RPE the top set actually FELT like; optionally "
-         "the prescribed RPE (else the engine uses this week's target). "
-         "Examples: 'squat felt like RPE 7 but was meant to be 8' -> "
-         "adjust_lift_load(lift='squat', felt_rpe=7); 'bench was way too "
-         "heavy, more like a 9.5' -> adjust_lift_load(lift='bench', "
-         "felt_rpe=9.5). The engine computes the kg change (~2.5kg per RPE "
-         "point, capped); report the new top-set weight it returns."),
+         "MANUAL TM TWEAK — use ONLY when the lifter EXPLICITLY asks to "
+         "manually change a training max with no session to evaluate. "
+         "Examples that route HERE: 'reset my squat TM to 140', 'bump "
+         "my bench down 2.5kg because I'm coming back from a cold', "
+         "'my TMs feel inflated, drop everything 5%'.\n\n"
+         "DO NOT use this for 'how a session/week felt' messages — those "
+         "are session feedback and MUST go through log_session so the "
+         "progression policy (rule or bandit) can autoregulate. Using "
+         "adjust_lift_load for 'felt heavy' bypasses the policy entirely; "
+         "the bandit never sees the session and never learns. If you find "
+         "yourself reaching for adjust_lift_load on a 'felt X' message, "
+         "STOP and call log_session instead — it accepts `rpe` + `notes` "
+         "and defaults weight/reps to this week's prescription.\n\n"
+         "When you DO call this (genuine manual request): pass the lift "
+         "and the RPE the top set actually felt like (or the RPE that "
+         "would justify the requested kg change); optionally the "
+         "prescribed RPE. The engine nudges working 1RM (~2.5kg per RPE "
+         "point, capped) and keeps the SAME block. Report the new top-set "
+         "weight it returns."),
      "input_schema": {"type": "object",
                       "properties": {
                           "lift": {"type": "string",
@@ -940,6 +1011,63 @@ TOOL_SCHEMAS = [
          "good, on to next week'). After the last productive week it rolls "
          "into the deload. Do NOT propose_block for this."),
      "input_schema": {"type": "object", "properties": {}}},
+    {"name": "log_session",
+     "description": (
+         "LOG A COMPLETED SESSION through the FULL agent loop "
+         "(PERCEIVE -> REASON -> GUARD -> POLICY -> DECIDE -> ACT). "
+         "CALL THIS — not adjust_lift_load — for ANY message where the "
+         "lifter reports how a session or week WENT or FELT for a main "
+         "lift on an ACTIVE block. This is the canonical autoregulation "
+         "path: interprets free-text notes, updates readiness, runs the "
+         "progression policy (rule-based or learned bandit), may trigger "
+         "a deload, records a PR if hit, and persists the session to "
+         "long-term memory. adjust_lift_load is a manual TM tweak that "
+         "bypasses the entire loop — only use it for explicit manual "
+         "control requests, NOT for evaluating sessions.\n\n"
+         "weight + reps are OPTIONAL. If the lifter doesn't restate them "
+         "(common — they just told you the kg in the previous turn or "
+         "they're reporting a 'how it felt' summary), omit those args "
+         "and the engine defaults to the lift's pending prescription "
+         "(the top set + reps already shown to the lifter for this "
+         "week). Pass `rpe` if the lifter said how it felt; pass `notes` "
+         "with the lifter's verbatim message so the feedback interpreter "
+         "can extract sticking points + pain flags.\n\n"
+         "Examples — ALL of these route HERE (do NOT chain "
+         "adjust_lift_load + advance_block_week instead):\n"
+         "  'squat felt brutal, got 3 reps at RPE 9.5, missed my 4th' -> "
+         "log_session(lift='squat', weight=<the weight>, reps=3, rpe=9.5, "
+         "notes='felt brutal, missed my 4th')\n"
+         "  'just deadlifted 200x5 RPE 8' -> log_session(lift='deadlift', "
+         "weight=200, reps=5, rpe=8, notes='just deadlifted 200x5 RPE 8')\n"
+         "  'first week squat felt heavy as hell with RPE 8 instead of "
+         "RPE 6.5' -> log_session(lift='squat', rpe=8, notes='first week "
+         "squat felt heavy as hell, RPE 8 instead of prescribed 6.5'). "
+         "weight + reps default to this week's prescribed top set.\n"
+         "  'bench was easy this week, more like RPE 6' -> "
+         "log_session(lift='bench', rpe=6, notes='bench was easy this "
+         "week, more like RPE 6'). Same fallback.\n"
+         "  'squat day went well, on plan' -> log_session(lift='squat', "
+         "notes='squat day went well, on plan'). No rpe; engine reads it "
+         "from notes as a clean session.\n\n"
+         "Only use adjust_lift_load when the lifter EXPLICITLY asks for "
+         "a manual TM change unrelated to evaluating a session "
+         "(e.g. 'reset my squat TM to 140', 'bump bench down 2.5kg "
+         "because I'm coming back from sickness'). 'Felt X' is NEVER a "
+         "manual-tweak request — it's session feedback that needs the "
+         "policy/bandit to handle."),
+     "input_schema": {"type": "object",
+                      "properties": {
+                          "lift": {"type": "string",
+                                   "enum": ["squat", "bench", "deadlift"]},
+                          "weight": {"type": "number",
+                              "description": "Weight lifted on the top set (kg). OPTIONAL — defaults to this week's prescribed top set if omitted."},
+                          "reps": {"type": "integer",
+                              "description": "Reps the lifter ACTUALLY performed. OPTIONAL — defaults to this week's prescribed reps if omitted."},
+                          "rpe": {"type": "number",
+                              "description": "RPE the set actually felt like (0-10). Omit if the lifter didn't state one — the engine infers from notes + missed reps."},
+                          "notes": {"type": "string",
+                              "description": "The lifter's verbatim free-text description. Passed through to the feedback interpreter for sticking-point + pain-flag extraction."}},
+                      "required": ["lift"]}},
 
     # --- macrocycle (season plan) tools -----------------------------------
     {"name": "get_season_plan",
@@ -1475,6 +1603,8 @@ def dispatch_tool(state: dict, name: str, args: dict, agent=None) -> dict:
             return _tool_adjust_lift_load(agent, **args)
         if name == "advance_block_week":
             return _tool_advance_block_week(agent, **args)
+        if name == "log_session":
+            return _tool_log_session(agent, **args)
         if name == "get_season_plan":
             return _tool_get_season_plan(state)
         if name == "propose_season":
@@ -1792,36 +1922,58 @@ COACH_SYSTEM = (
 
     "MODE 3 — ACTIVE BLOCK (active_block exists)\n"
     "  Normal coaching: answer questions, diagnose sticking points. The engine "
-    "  handles weekly waves and deloads automatically — don't override.\n"
-    "  UPDATE FROM FEEDBACK — DON'T REBUILD: when the lifter reports how a "
-    "  session/week FELT on an ACTIVE block, adjust the block IN PLACE. NEVER "
-    "  call propose_block / review_current_block for this — rebuilding the "
-    "  block is wrong and loses their progress. Route by what they say:\n"
-    "    - 'felt light / too easy / the RPE was LOWER than the target' -> call "
-    "      adjust_lift_load(lift, felt_rpe) — engine bumps that lift's load UP "
-    "      and keeps the same block. Report the new top-set weight it returns.\n"
-    "    - 'felt heavy / too hard / the RPE was HIGHER' -> "
-    "      adjust_lift_load(lift, felt_rpe) — engine bumps it DOWN.\n"
-    "    - 'felt good / about the right RPE — move on / next week' -> call "
-    "      advance_block_week (NO load change).\n"
-    "    - both ('it was light, bump it and move on') -> adjust_lift_load "
-    "      THEN advance_block_week.\n"
-    "    - feedback with no lift named ('this week felt easy') -> ask which "
-    "      lift, or adjust the lift they mention. The engine does the kg math "
-    "      (~2.5kg per RPE point); you only pass the felt RPE.\n"
-    "    - GAUGE THE WHOLE WEEK: if they mention only ONE lift ('squat felt "
-    "      light'), adjust that lift, then ASK how the OTHER primary lifts AND "
-    "      the secondary/variation days felt this week before wrapping up — "
-    "      and adjust each off-target lift with its own adjust_lift_load call. "
-    "      Don't silently change only the one lift they happened to name.\n"
-    "    - FORWARD-LOOKING (don't touch a completed session): feedback on a "
-    "      week the lifter ALREADY did changes the UPCOMING weeks, not the "
-    "      session just performed. Call advance_block_week to lock in the "
-    "      finished week, THEN adjust — so the change lands on the next week. "
-    "      Say so: 'bumped your squat from next week onward; this week stays "
-    "      as you did it.'\n"
-    "  Only propose_block (replace_active=true) when they EXPLICITLY ask to "
-    "  REDESIGN the block or add a NEW weakness — never for 'how it felt'.\n\n"
+    "  handles weekly waves and deloads automatically — don't override.\n\n"
+
+    "  LOG A SESSION — THE DEFAULT PATH FOR ANY 'HOW IT WENT' MESSAGE.\n"
+    "  Any time the lifter reports how a main-lift session or week WENT or "
+    "  FELT, call log_session(lift, ...). That includes BOTH:\n"
+    "    (a) Concrete-numbers reports: 'squatted 130x3 RPE 9.5, missed my "
+    "        4th', 'just benched 100x5 felt brutal', '200kg DL for 5'.\n"
+    "    (b) Feel-only reports without restated numbers: 'first week squat "
+    "        felt heavy as hell with RPE 8 instead of 6.5', 'bench was "
+    "        easy, more like RPE 6', 'squat day went well, on plan'.\n"
+    "  In case (b), OMIT weight + reps — log_session defaults them to "
+    "  this week's prescribed top set. Pass `rpe` if the lifter named one, "
+    "  pass their verbatim message through `notes`, and let the engine "
+    "  evaluate. log_session drives the FULL agent loop: feedback "
+    "  interpretation, readiness update, the progression policy (rule or "
+    "  bandit), guardrails, PR detection, deload trigger.\n"
+    "  DO NOT chain adjust_lift_load + advance_block_week to fake a log. "
+    "  That bypasses the policy + bandit entirely (they never see the "
+    "  session, so they never learn), and the [PERCEIVE / REASON / GUARD "
+    "  / POLICY / DECIDE / ACT] trace — the project's headline demo — "
+    "  never prints. log_session IS the autoregulation; adjust_lift_load "
+    "  is not a substitute for it.\n"
+    "  After log_session, the engine has already autoregulated the lift "
+    "  (it may have bumped readiness, advanced the week, or triggered a "
+    "  deload all on its own). Do NOT also call adjust_lift_load or "
+    "  advance_block_week on top — read the tool result and report what "
+    "  changed, including any [POLICY] / [LEARN] lines from the trace.\n"
+    "  GAUGE THE WHOLE WEEK: if the lifter mentions only ONE lift ('squat "
+    "  felt heavy'), call log_session for that lift, then ASK how the "
+    "  OTHER primary lifts felt this week before wrapping up — and "
+    "  log_session each one in turn. Don't silently update only the lift "
+    "  they happened to name.\n\n"
+
+    "  ADJUST_LIFT_LOAD — MANUAL TM TWEAKS ONLY (rare). Only use when the "
+    "  lifter EXPLICITLY asks for a manual TM change with no session to "
+    "  evaluate. Examples: 'reset my squat TM to 140', 'bump my bench "
+    "  down 2.5kg because I'm coming back from a cold', 'my TMs feel "
+    "  inflated, drop everything 5%'. If the message instead reads as "
+    "  feedback on a session or week ('felt heavy', 'was easy', 'RPE was "
+    "  higher than planned'), that's log_session territory — adjust_lift_"
+    "  load skips the policy and is the wrong tool.\n\n"
+
+    "  ADVANCE_BLOCK_WEEK — MOVE-ON-ONLY. Only use when the lifter wants "
+    "  to advance the week with NO session feedback to evaluate ('skip to "
+    "  next week', 'move me to week 3'). If they're reporting how a week "
+    "  felt — even 'felt good, move on' — call log_session instead so the "
+    "  policy sees the signal; the engine advances the week itself when "
+    "  the decision is 'hold' or 'progress'.\n\n"
+
+    "  PROPOSE_BLOCK (replace_active=true) — only when they EXPLICITLY "
+    "  ask to REDESIGN the block or add a NEW weakness; never for 'how it "
+    "  felt'.\n\n"
 
     "EFFICIENCY (very important — slow responses break the UX):\n"
     "- DO NOT call calculate_load or get_training_max while building "

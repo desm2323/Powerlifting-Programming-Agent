@@ -16,7 +16,7 @@ import tempfile
 
 import pytest
 
-from coach import memory, policy, readiness
+from coach import memory, policy, reasoning, readiness
 from coach.loop import Agent
 
 
@@ -337,3 +337,182 @@ def test_loop_bandit_state_survives_agent_restart(monkeypatch):
         b = Agent(path)
         assert isinstance(b.policy, policy.BanditPolicy)
         assert b.state["policy_state"]["cells"] == cells_before
+
+
+# --- log_session reachable via the LLM tool dispatch ----------------------
+# The bandit lives inside log_session, so a natural-language session
+# description that bypasses the regex log-extractor must still route
+# through the same path — otherwise the policy never sees the session and
+# the project's headline autoregulation story is fragile.
+
+def test_log_session_tool_drives_full_loop(monkeypatch):
+    """Calling log_session via dispatch_tool must mutate state identically
+    to a direct agent.log_session call: readiness moves, pending_decisions
+    stashes, the session is appended, and the result payload carries the
+    interpreted ev fields so the LLM can talk about it."""
+    monkeypatch.delenv("COACH_POLICY", raising=False)
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = _agent_with_block(path)
+        readiness_before = a.state["readiness"]
+        sessions_before = len(a.state["sessions"])
+
+        result = reasoning.dispatch_tool(
+            a.state, "log_session",
+            {"lift": "squat", "weight": 130, "reps": 3, "rpe": 9.5,
+             "notes": "felt brutal, missed my 4th"},
+            agent=a,
+        )
+
+        assert "error" not in result
+        assert result["logged"]["lift"] == "squat"
+        assert result["effective_rpe"] is not None
+        assert a.state["readiness"] != readiness_before  # loop ran
+        assert len(a.state["sessions"]) == sessions_before + 1
+        # Rule policy made a free choice — pending stash is the proof the
+        # policy path ran (forced/overridden actions are not stashed).
+        # Action may be hold/progress/deload depending on the eval; we
+        # only assert SOMETHING was stashed.
+        assert "squat" in a.state["pending_decisions"] \
+            or a.state["block"].get("in_deload")
+
+
+def test_log_session_tool_with_bandit_credits_delayed_reward(monkeypatch):
+    """Two consecutive log_session tool calls under the bandit policy
+    should leave a learned cell with n > prior_strength, proving the
+    policy.update credit pathway is reached from the tool dispatch."""
+    monkeypatch.setenv("COACH_POLICY", "bandit")
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = _agent_with_block(path)
+        reasoning.dispatch_tool(
+            a.state, "log_session",
+            {"lift": "squat", "weight": 130, "reps": 3, "rpe": 8.0,
+             "notes": "first set"}, agent=a)
+        n_after_first = sum(c["n"] for c in a.state["policy_state"]["cells"])
+        reasoning.dispatch_tool(
+            a.state, "log_session",
+            {"lift": "squat", "weight": 132, "reps": 3, "rpe": 7.5,
+             "notes": "second set"}, agent=a)
+        n_after_second = sum(c["n"] for c in a.state["policy_state"]["cells"])
+        # The second log credits the first decision via policy.update.
+        assert n_after_second > n_after_first
+
+
+def test_adjust_lift_load_tool_does_not_touch_readiness_or_policy(monkeypatch):
+    """Regression guard: adjust_lift_load must remain a pure TM nudge.
+    If it ever started touching readiness or stashing pending_decisions
+    it would silently double-update the bandit (once from log_session,
+    once from the manual tweak) — keeping the paths separated keeps the
+    learning signal clean."""
+    monkeypatch.delenv("COACH_POLICY", raising=False)
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = _agent_with_block(path)
+        readiness_before = a.state["readiness"]
+        sessions_before = len(a.state["sessions"])
+        pending_before = dict(a.state["pending_decisions"])
+        tm_before = a.state["lifts"]["squat"]["training_max"]
+
+        # Use an explicit prescribed_rpe far from felt so the kg delta is
+        # large enough to clear the round-to-increment cliff (raw delta
+        # ~5 kg, capped to the per-lift 2.5 kg per-call ceiling).
+        result = reasoning.dispatch_tool(
+            a.state, "adjust_lift_load",
+            {"lift": "squat", "felt_rpe": 6.0, "prescribed_rpe": 8.0},
+            agent=a,
+        )
+
+        assert "error" not in result
+        # TM moved — that's adjust_lift_load's job.
+        assert a.state["lifts"]["squat"]["training_max"] != tm_before
+        # Everything ELSE the loop touches is untouched.
+        assert a.state["readiness"] == readiness_before
+        assert len(a.state["sessions"]) == sessions_before
+        assert a.state["pending_decisions"] == pending_before
+
+
+def test_log_session_tool_refuses_without_active_block(monkeypatch):
+    """Defensive: log_session needs a committed block to evaluate
+    against. Calling the tool before commit_block returns a clear error
+    instead of crashing the ReAct loop."""
+    monkeypatch.delenv("COACH_POLICY", raising=False)
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = Agent(path)
+        a.init_program("Test", {"squat": 150, "bench": 100, "deadlift": 190},
+                       bodyweight_kg=85, experience="intermediate")
+        result = reasoning.dispatch_tool(
+            a.state, "log_session",
+            {"lift": "squat", "weight": 130, "reps": 3, "rpe": 8.0,
+             "notes": ""}, agent=a,
+        )
+        assert "error" in result
+        assert "no active block" in result["error"].lower()
+
+
+def test_log_session_tool_rejects_unknown_lift(monkeypatch):
+    monkeypatch.delenv("COACH_POLICY", raising=False)
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = _agent_with_block(path)
+        result = reasoning.dispatch_tool(
+            a.state, "log_session",
+            {"lift": "snatch", "weight": 80, "reps": 3, "rpe": 8.0,
+             "notes": ""}, agent=a,
+        )
+        assert "error" in result
+
+
+def test_log_session_tool_defaults_weight_and_reps_from_pending_prescription(monkeypatch):
+    """A 'felt heavy at RPE 8' style message from the lifter doesn't
+    restate the kg + reps — they already saw them on screen this week.
+    log_session must default both from pending_prescriptions[lift] so
+    the policy still gets a learning signal from these messages."""
+    monkeypatch.setenv("COACH_POLICY", "bandit")
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = _agent_with_block(path)
+        pending = a.state["pending_prescriptions"]["squat"]
+        prescribed_weight = pending["top_weight"]
+        prescribed_reps = pending["reps"]
+        sessions_before = len(a.state["sessions"])
+
+        result = reasoning.dispatch_tool(
+            a.state, "log_session",
+            {"lift": "squat", "rpe": 8.0,
+             "notes": "first week squat felt heavy as hell with RPE 8 "
+                      "instead of RPE 6.5"},
+            agent=a,
+        )
+
+        assert "error" not in result
+        assert result["logged"]["weight"] == prescribed_weight
+        assert result["logged"]["reps"] == prescribed_reps
+        # The full loop ran — a session got recorded.
+        assert len(a.state["sessions"]) == sessions_before + 1
+        recorded = a.state["sessions"][-1]
+        assert recorded["weight"] == prescribed_weight
+        assert recorded["reps"] == prescribed_reps
+        # And the bandit at least seeded a bucket via select().
+        assert len(a.state["policy_state"].get("cells", [])) > 0
+
+
+def test_log_session_tool_errors_when_no_prescription_and_no_args(monkeypatch):
+    """If neither the lifter nor the engine has numbers to log against,
+    bail with a clear error instead of inventing them."""
+    monkeypatch.delenv("COACH_POLICY", raising=False)
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = _agent_with_block(path)
+        # Wipe the prescription that commit_block populated, simulating a
+        # state where the lifter is mid-cycle but the prescription cache
+        # got cleared (e.g. after a deload entry).
+        a.state["pending_prescriptions"] = {}
+        result = reasoning.dispatch_tool(
+            a.state, "log_session",
+            {"lift": "squat", "rpe": 8.0, "notes": "felt heavy"},
+            agent=a,
+        )
+        assert "error" in result
+        assert "weight" in result["error"].lower()
