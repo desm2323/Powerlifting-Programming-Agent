@@ -20,7 +20,8 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from . import blocks as blocks_mod
-from . import guardrails, loading, memory, readiness, reasoning
+from . import guardrails, loading, memory, policy as policy_mod
+from . import readiness, reasoning
 
 # Back-compat: existing module code uses the bare `blocks` name extensively.
 blocks = blocks_mod
@@ -128,8 +129,19 @@ class Agent:
     def __init__(self, state_path: str = memory.DEFAULT_PATH):
         self.path = state_path
         self.state = memory.load_state(state_path)
+        # Pluggable progression policy. RulePolicy by default; BanditPolicy
+        # when COACH_POLICY=bandit or when the persisted state already
+        # contains a learned bandit table. Persisting the table means a
+        # restart inherits the lifter's learned policy — the bandit is
+        # cumulative across sessions, not per-process.
+        self.policy = policy_mod.make_policy(
+            state_dict=self.state.get("policy_state") or None)
 
     def _save(self):
+        # Snapshot the policy back into state so a learned bandit survives
+        # the next load. RulePolicy serializes to a tiny {"name": "rules"}
+        # dict — no behaviour change for the default path.
+        self.state["policy_state"] = self.policy.to_dict()
         memory.save_state(self.state, self.path)
 
     # -- init: record the lifter; the LLM decides the first block via chat ----
@@ -628,9 +640,24 @@ class Agent:
         _trace("REASON", f"interpreted: RPE {ev['effective_rpe']}, "
                          f"missed {ev['missed_reps']}, sticking {ev['sticking_point']}")
 
-        prev = self.state["readiness"]
-        self.state["readiness"] = readiness.update_readiness(prev, ev, rx["rpe_cap"])
-        _trace("REASON", f"readiness {prev} -> {self.state['readiness']}")
+        prev_readiness = self.state["readiness"]
+        self.state["readiness"] = readiness.update_readiness(
+            prev_readiness, ev, rx["rpe_cap"])
+        _trace("REASON", f"readiness {prev_readiness} -> {self.state['readiness']}")
+
+        # PR detection lifts ahead of decision-making so the reward signal
+        # for the previous policy action can include the PR bonus.
+        est = loading.est_1rm_from_rpe(weight, performed_reps, ev["effective_rpe"])
+        best_prev = self.state["lifts"][lift]["best_est_1rm"] or 0
+        pr_set = est > best_prev
+
+        # Delayed-reward bookkeeping: if the LAST log against this lift had
+        # the policy make a free choice (not forced/overridden), credit it
+        # now based on how THIS session turned out. The bandit learns from
+        # this update; RulePolicy ignores it.
+        self._reward_pending_decision(lift, ev, prev_readiness,
+                                      self.state["readiness"], pr_set,
+                                      rx["rpe_cap"])
 
         if readiness.is_overreach(ev, rx["rpe_cap"]):
             block["consecutive_overreach"] += 1
@@ -640,15 +667,40 @@ class Agent:
         if block.get("in_deload"):
             decision = "complete_deload"
             _trace("GUARD", "in deload week — completion is the only valid action")
+            policy_chose = False
         else:
             forced = self._end_of_block_or_overreach(block)
-            decision = "deload" if forced else readiness.decide_progression(
-                self.state["readiness"], ev, block["consecutive_overreach"])
+            override = readiness.safety_override(self.state["readiness"], ev)
+            if forced:
+                decision = "deload"
+                policy_chose = False
+            elif override is not None:
+                decision = override
+                policy_chose = False
+            else:
+                rule_action = readiness.decide_progression(
+                    self.state["readiness"], ev, block["consecutive_overreach"])
+                context = self._policy_context(ev, rx["rpe_cap"])
+                decision = self.policy.select(context, rule_action)
+                policy_chose = True
+                if self.policy.name != "rules":
+                    _trace("POLICY", self.policy.describe(context, rule_action))
             _trace("GUARD", f"forced_deload={forced}, "
+                            f"safety_override={override}, "
                             f"overreach_streak={block['consecutive_overreach']}")
         _trace("DECIDE", decision.upper())
 
-        est = loading.est_1rm_from_rpe(weight, performed_reps, ev["effective_rpe"])
+        # Stash this decision for the next log to credit. Skip when the
+        # policy didn't actually choose — forced/overridden/mechanical
+        # actions are not learning signal.
+        if policy_chose:
+            self.state["pending_decisions"][lift] = {
+                "context": self._policy_context(ev, rx["rpe_cap"]),
+                "action": decision,
+                "prev_readiness": self.state["readiness"],
+                "rpe_cap": rx["rpe_cap"],
+            }
+
         memory.record_session(self.state, {
             "lift": lift, "weight": weight, "reps": performed_reps,
             "effective_rpe": ev["effective_rpe"], "missed_reps": ev["missed_reps"],
@@ -657,8 +709,7 @@ class Agent:
             "block_type": block_type, "block_week": block["week"],
         })
 
-        best = self.state["lifts"][lift]["best_est_1rm"] or 0
-        if est > best:
+        if pr_set:
             memory.record_pr(self.state, lift, weight, performed_reps, est)
             self.state["lifts"][lift]["best_est_1rm"] = round(est, 1)
             _trace("ACT", f"new estimated 1RM for {lift}: {round(est,1)} kg")
@@ -678,6 +729,44 @@ class Agent:
         duration = block.get("duration_weeks") or 0
         end_of_block = duration and block["week"] >= duration
         return bool(end_of_block) or block.get("consecutive_overreach", 0) >= 2
+
+    def _policy_context(self, session_eval: dict, rpe_cap: float) -> dict:
+        """Build the context dict the policy buckets on. Captures the
+        signals the bandit needs to differentiate situations — current
+        readiness, how the session ran relative to the cap, and the
+        consecutive-overreach streak. Kept narrow so the discrete
+        state space stays small enough to learn from one lifter's data."""
+        return {
+            "readiness": self.state.get("readiness", 1.0),
+            "rpe_gap": (float(session_eval.get("effective_rpe", 0.0))
+                        - float(rpe_cap)),
+            "overreach_streak": self.state["block"].get(
+                "consecutive_overreach", 0),
+        }
+
+    def _reward_pending_decision(self, lift: str, this_eval: dict,
+                                 prev_readiness: float, new_readiness: float,
+                                 pr_set: bool, rpe_cap: float) -> None:
+        """If the last logged session for this lift made a policy choice
+        (stashed as pending_decisions[lift]), compute the reward from this
+        session's outcome and feed it back. Then clear the slot.
+
+        Reward only flows when the policy actually CHOSE the previous
+        action — forced or safety-overridden actions are never stashed,
+        so the bandit never gets a misattributed reward."""
+        pending = self.state.get("pending_decisions", {}).get(lift)
+        if not pending:
+            return
+        reward = policy_mod.compute_reward(
+            this_eval, prev_readiness=pending.get("prev_readiness", prev_readiness),
+            new_readiness=new_readiness, pr_set=pr_set,
+            rpe_cap=pending.get("rpe_cap", rpe_cap))
+        self.policy.update(pending["context"], pending["action"], reward)
+        if self.policy.name != "rules":
+            _trace("LEARN", f"reward {reward:+.2f} for prior "
+                            f"{pending['action'].upper()} "
+                            f"(bucket={policy_mod.bucket(pending['context'])})")
+        del self.state["pending_decisions"][lift]
 
     def _apply_decision(self, decision: str, lift: str, block: dict):
         if decision == "progress":

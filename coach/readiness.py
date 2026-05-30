@@ -61,6 +61,23 @@ def decide_progression(readiness: float, session_eval: dict,
     return "hold"
 
 
+def safety_override(readiness: float, session_eval: dict) -> str | None:
+    """Hard safety constraints that any policy must honour. Returns the
+    forced action, or None if the policy is free to decide.
+
+    This is the guardrail layer SITTING ABOVE the policy. The bandit (and
+    any future learned policy) is allowed to explore inside the space
+    these rules leave open, but never below the safety floor. Without
+    this, ε-greedy could occasionally push 'progress' through pain, which
+    is exactly the kind of failure that erodes trust in a learned system.
+    """
+    if session_eval.get("flags"):
+        return "hold"                  # pain/injury -> never push, ever
+    if readiness < 0.30:
+        return "deload"                # readiness floor — bandit can't explore through this
+    return None
+
+
 def is_overreach(session_eval: dict, rpe_cap: float) -> bool:
     """Did this session run hotter than the phase intended?"""
     return session_eval.get("effective_rpe", 0) > rpe_cap or \

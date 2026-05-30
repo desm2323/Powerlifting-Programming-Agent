@@ -68,6 +68,15 @@ def default_state() -> dict:
         # Persistent chat history so the browser UI survives a refresh.
         # Each entry: {"role": "user"|"assistant", "content": str}.
         "chat_history": [],
+        # Progression policy state — populated only when the bandit is
+        # active. {"name": "rules"} keeps RulePolicy explicit; switching
+        # to bandit fills "cells" with the learned Q-table. See policy.py.
+        "policy_state": {"name": "rules"},
+        # Delayed-reward bookkeeping. When the policy decides progress /
+        # hold / deload after a logged session, we stash the context and
+        # action here; the NEXT logged session computes the reward and
+        # feeds it back via policy.update(). One slot per lift.
+        "pending_decisions": {},
     }
 
 
@@ -80,6 +89,8 @@ def load_state(path: str = DEFAULT_PATH) -> dict:
     state.setdefault("pending_prescriptions", {})
     state.setdefault("block_history", [])
     state.setdefault("chat_history", [])
+    state.setdefault("policy_state", {"name": "rules"})
+    state.setdefault("pending_decisions", {})
     sp = state.setdefault("season_plan", {})
     sp.setdefault("competition_date", None)
     sp.setdefault("competition_lifts", None)
