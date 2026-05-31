@@ -10,29 +10,6 @@ hard safety limits.
 
 > **2-minute demo video:** [Watch on ScreenApp](https://screenapp.io/app/v/rjvO2KEXRU)
 
----
-
-## Why this exists
-
-General-purpose chat models (GPT, Gemma, etc.) are unreliable powerlifting
-programmers: they pick weights that are too heavy or too light, and they can't
-manage fatigue. That isn't a prompt problem — it's structural. A chat model is:
-
-- **stateless** — it never sees how training actually went, so it can't manage
-  fatigue, which *is* an accumulated-history variable;
-- **ungrounded** — it guesses loads from text patterns instead of computing them
-  from your numbers;
-- **unconstrained** — it has no concept of volume ceilings or sane progression.
-
-This agent fixes each of those by *adding* the missing pieces: persistent state,
-grounded computation, explicit domain constraints, a feedback loop, and a
-curated knowledge base built from three real coaches' content (Ben L. Johnson,
-Sebastian Oreb, and Alexander Bromley's YouTube videos, with timestamped
-transcripts cached under `docs/`). The LLM is
-used only for what it's good at — interpreting fuzzy feedback, designing the
-week structure, diagnosing weaknesses, and explaining decisions. **It never
-picks a weight.**
-
 ## Architecture
 
 ```
