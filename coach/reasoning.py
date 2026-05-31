@@ -2677,7 +2677,7 @@ COACH_SYSTEM = (
 )
 
 
-def coach_react(query: str, state: dict, agent=None, max_steps: int = 20,
+def coach_react(query: str, state: dict, agent=None, max_steps: int = 30,
                 system: str | None = None, on_step=None) -> dict:
     """
     Run a ReAct loop: the LLM may interleave thinking with tool calls until it
