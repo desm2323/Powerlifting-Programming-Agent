@@ -47,8 +47,10 @@ picks a weight.**
    |  (state.json (blocks,       (loading   (TM caps,      (PERCEIVE ->   |
    |   sessions,   landmarks,     math,      MRV ceiling,   REASON ->     |
    |   PRs, block  accessories,   plates,    weekly-plan    GUARD ->      |
-   |   history,    expert KB      RPE        validator,     DECIDE ->     |
-   |   chat log)   tri-source)    model)     scope filter)  ACT)          |
+   |   history,    expert KB      RPE        validator,     POLICY ->     |
+   |   chat log)   tri-source)    model)     scope filter)  DECIDE ->     |
+   |                                                        ACT ->        |
+   |                                                        PERSIST)      |
    +-----------------------------------+-----------------------------------+
                                        |
                               Plan + adjustment
@@ -63,7 +65,7 @@ picks a weight.**
 | Knowledge | `coach/blocks.py`, `coach/landmarks.py`, `coach/accessories.py`, `coach/expert_knowledge.py` | knowledge base (block types, volume landmarks, accessory catalog, tri-source coaching KB) |
 | Tools | `coach/loading.py` | tool use / code execution (Program-of-Thoughts) |
 | Guardrails | `coach/guardrails.py` | policy adherence / safety |
-| Policy | `coach/policy.py` | progression policy (rule baseline + contextual ε-greedy bandit) |
+| Policy | `coach/policy.py` | sequential decision-making / contextual bandit (RL) |
 | Loop | `coach/loop.py` | PAGE perceive → reason → act cycle |
 | Interface | `coach/chat.py`, `coach/chat_web.py`, `main.py` | CLI + REPL + Streamlit UI |
 
