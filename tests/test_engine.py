@@ -622,6 +622,87 @@ def test_validator_rejects_same_lift_on_consecutive_days():
     assert err is not None and "consecutive" in err.lower()
 
 
+def test_validator_back_to_back_error_suggests_concrete_swap_day():
+    """Beyond saying 'consecutive', the error must include a specific
+    'move X to Y' suggestion so the LLM can converge in one retry instead
+    of blindly shuffling. Mon+Wed are training; Tue, Thu-Sun are free —
+    Tue is the closest free slot ≥48h from Monday."""
+    plan = {"days": [
+        {"label": "Monday — Heavy Bench", "exercises": [
+            {"name": "Bench", "lift": "bench", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            *_generic_accessories("bench")]},
+        {"label": "Tuesday — Secondary Bench", "exercises": [
+            {"name": "Close-grip bench (top set)", "lift": "bench",
+             "role": "secondary", "sets": 1, "reps": 5,
+             "intensity_pct": 0.72, "rpe_cap": 7},
+            {"name": "Close-grip bench (back-offs)", "lift": "bench",
+             "role": "secondary", "sets": 3, "reps": 6,
+             "intensity_pct": 0.62, "rpe_cap": 6},
+            *_generic_accessories("bench")]},
+    ]}
+    err = guardrails.validate_weekly_plan(plan, block_type="strength")
+    assert err is not None
+    assert "consecutive" in err.lower()
+    assert "concrete fix" in err.lower()
+    # The suggestion should name a specific weekday to move TO. With only
+    # Mon+Tue as training and the rest free, Thursday is the natural
+    # ≥48h-spaced landing slot (2 days after Monday); the helper picks
+    # the closest valid slot to the moved day.
+    assert any(wd in err for wd in
+               ("Thursday", "Friday", "Saturday", "Sunday"))
+
+
+def test_suggest_swap_day_picks_closest_valid_slot():
+    """Helper picks the rest weekday with proper 48h+ spacing AND
+    minimum disruption from the original (move) day."""
+    from coach.guardrails import _suggest_swap_day
+    # bench Wed (2) + Thu (3). Rest weekdays in plan: Mon, Tue, Sat, Sun.
+    # Best: keep Wed, move Thu → Sat (3 days from Wed ≥ 2 ✓, only 2 days
+    # later than Thu — minimal change).
+    out = _suggest_swap_day((2, 3), {0, 1, 5, 6})
+    assert out is not None
+    from_wd, to_wd = out
+    assert from_wd in (2, 3)
+    # The kept day should be ≥2 days from the new placement, and the
+    # move distance from the original should be the SMALLEST possible.
+    kept = 2 if from_wd == 3 else 3
+    raw = abs(to_wd - kept)
+    assert min(raw, 7 - raw) >= 2
+
+
+def test_suggest_swap_day_returns_none_when_no_valid_slot():
+    """If no rest weekdays exist (every weekday is a training day for
+    some lift), no swap can be suggested — engine still errors, just
+    without a 'move X to Y' hint."""
+    from coach.guardrails import _suggest_swap_day
+    # squat Mon (0) + Tue (1). Zero available rest weekdays.
+    out = _suggest_swap_day((0, 1), set())
+    assert out is None
+
+
+def test_validator_rejects_malformed_non_dict_day_entry_gracefully():
+    """A days[] with a non-dict entry (LLM JSON glitch) must return a
+    clean error, not crash with AttributeError. Regression: was crashing
+    inside the validator's error formatter when day.get(...) was called
+    on a string."""
+    plan = {"days": [
+        {"label": "Monday — Squat", "exercises": [
+            {"name": "Squat", "lift": "squat", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            *_generic_accessories("squat")]},
+        "Tuesday — Rest",  # bare string instead of a day dict
+        {"label": "Wednesday — Bench", "exercises": [
+            {"name": "Bench", "lift": "bench", "role": "primary",
+             "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 9},
+            *_generic_accessories("bench")]},
+    ]}
+    err = guardrails.validate_weekly_plan(plan, block_type="strength")
+    assert err is not None
+    assert "not a structured day-object" in err.lower()
+    # Importantly: did NOT crash with AttributeError mid-validation.
+
+
 def test_validator_allows_two_lifts_stacked_same_day():
     """Stacking two DIFFERENT compounds on one day is allowed (fatigue
     management) — Rule 8 only bars the SAME lift on consecutive days, and

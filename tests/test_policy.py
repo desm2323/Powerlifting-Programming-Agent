@@ -666,6 +666,130 @@ def test_commit_block_honors_season_plan_planned_start():
             f"block started {actual_start}, expected >= {season_peaking_start}")
 
 
+# --- propose_block reachable without a season_plan -----------------------
+
+def test_propose_block_works_without_season_plan():
+    """Regression: 'create me a strength program to get stronger on all
+    3 lifts' (no competition_date, no season_plan committed first) must
+    still successfully commit a strength block. The recent season-plan
+    backfill + planned_start-floor changes touched commit_block; this
+    locks in that those changes did NOT break the single-block-no-season
+    path the user hit when they asked for a plain block."""
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = Agent(path)
+        a.init_program("T", {"squat": 150, "bench": 100, "deadlift": 190},
+                       bodyweight_kg=85, experience="intermediate")
+        # No commit_season_plan call — go straight to propose_block.
+        out = a.commit_block(
+            "strength", 4, "get stronger on all 3", ["squat", "bench", "deadlift"],
+            weekly_plan={"days": [
+                {"label": "Monday — Heavy Squat", "exercises": [
+                    {"name": "Squat (top set)",   "lift": "squat", "role": "primary",
+                     "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 8},
+                    {"name": "Squat (back-offs)", "lift": "squat", "role": "primary",
+                     "sets": 3, "reps": 5, "intensity_pct": 0.72, "rpe_cap": 7},
+                    {"name": "Leg press", "lift": "squat", "role": "accessory",
+                     "sets": 3, "reps": 10, "intensity_pct": 0, "rpe_cap": 8},
+                    {"name": "Leg curl",  "lift": "squat", "role": "accessory",
+                     "sets": 3, "reps": 12, "intensity_pct": 0, "rpe_cap": 8}]},
+                {"label": "Tuesday — Heavy Bench", "exercises": [
+                    {"name": "Bench (top set)",   "lift": "bench", "role": "primary",
+                     "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 8},
+                    {"name": "Bench (back-offs)", "lift": "bench", "role": "primary",
+                     "sets": 3, "reps": 5, "intensity_pct": 0.72, "rpe_cap": 7},
+                    {"name": "DB row", "lift": "bench", "role": "accessory",
+                     "sets": 3, "reps": 10, "intensity_pct": 0, "rpe_cap": 8},
+                    {"name": "Tricep pushdown", "lift": "bench", "role": "accessory",
+                     "sets": 3, "reps": 12, "intensity_pct": 0, "rpe_cap": 8}]},
+                {"label": "Wednesday — Rest", "exercises": []},
+                {"label": "Thursday — Heavy Deadlift", "exercises": [
+                    {"name": "Deadlift (top set)",   "lift": "deadlift", "role": "primary",
+                     "sets": 1, "reps": 3, "intensity_pct": 0.85, "rpe_cap": 8},
+                    {"name": "Deadlift (back-offs)", "lift": "deadlift", "role": "primary",
+                     "sets": 3, "reps": 5, "intensity_pct": 0.72, "rpe_cap": 7},
+                    {"name": "Barbell row", "lift": "deadlift", "role": "accessory",
+                     "sets": 3, "reps": 8, "intensity_pct": 0, "rpe_cap": 8},
+                    {"name": "GHR", "lift": "deadlift", "role": "accessory",
+                     "sets": 3, "reps": 10, "intensity_pct": 0, "rpe_cap": 8}]},
+                {"label": "Friday — Secondary Squat", "exercises": [
+                    {"name": "Paused squat (top set)",   "lift": "squat", "role": "secondary",
+                     "sets": 1, "reps": 5, "intensity_pct": 0.72, "rpe_cap": 7},
+                    {"name": "Paused squat (back-offs)", "lift": "squat", "role": "secondary",
+                     "sets": 3, "reps": 6, "intensity_pct": 0.62, "rpe_cap": 6},
+                    {"name": "Bulgarian split squat", "lift": "squat", "role": "accessory",
+                     "sets": 3, "reps": 10, "intensity_pct": 0, "rpe_cap": 8},
+                    {"name": "Hanging leg raise", "lift": "squat", "role": "accessory",
+                     "sets": 3, "reps": 12, "intensity_pct": 0, "rpe_cap": 8}]},
+                {"label": "Saturday — Secondary Bench", "exercises": [
+                    {"name": "Close-grip bench (top set)",   "lift": "bench", "role": "secondary",
+                     "sets": 1, "reps": 5, "intensity_pct": 0.72, "rpe_cap": 7},
+                    {"name": "Close-grip bench (back-offs)", "lift": "bench", "role": "secondary",
+                     "sets": 3, "reps": 6, "intensity_pct": 0.62, "rpe_cap": 6},
+                    {"name": "Lateral raise", "lift": "bench", "role": "accessory",
+                     "sets": 3, "reps": 12, "intensity_pct": 0, "rpe_cap": 8},
+                    {"name": "Face pull",     "lift": "bench", "role": "accessory",
+                     "sets": 3, "reps": 15, "intensity_pct": 0, "rpe_cap": 8}]},
+                {"label": "Sunday — Rest", "exercises": []},
+            ]},
+        )
+        assert "error" not in out, out
+        assert a.state["block"]["type"] == "strength"
+        assert a.state["block"]["weekly_plan"]["days"]
+
+
+# --- ReAct stuck-loop guard ----------------------------------------------
+
+def test_stuck_error_helper_detects_3_consecutive_identical_errors():
+    """The pure helper should return the error string when the last
+    STUCK_THRESHOLD calls to the same tool returned an identical error,
+    None otherwise. Used by call_with_tools to bail before burning the
+    rest of max_steps on the same validator failure."""
+    from coach.reasoning import _stuck_error, STUCK_THRESHOLD
+    same_err = {"error": "REFUSED: bench must be trained 2x/week"}
+    # Not enough calls yet -> None.
+    steps = [("propose_block", {}, same_err)] * (STUCK_THRESHOLD - 1)
+    assert _stuck_error(steps, "propose_block") is None
+    # STUCK_THRESHOLD identical errors -> returns the error string.
+    steps = [("propose_block", {}, same_err)] * STUCK_THRESHOLD
+    assert _stuck_error(steps, "propose_block") == same_err["error"]
+    # Different errors over the window -> not stuck (making progress).
+    steps = [("propose_block", {}, {"error": f"err {i}"})
+             for i in range(STUCK_THRESHOLD)]
+    assert _stuck_error(steps, "propose_block") is None
+    # Successful call between errors resets the window (it's the LAST N
+    # that count) — last 3 are still all the same error so still stuck.
+    steps = [
+        ("propose_block", {}, same_err),
+        ("propose_block", {}, {"committed": True}),  # success in middle
+        ("propose_block", {}, same_err),
+        ("propose_block", {}, same_err),
+        ("propose_block", {}, same_err),
+    ]
+    assert _stuck_error(steps, "propose_block") == same_err["error"]
+    # Calls to other tools in between don't reset (we only window the
+    # target tool's own calls).
+    steps = [
+        ("propose_block", {}, same_err),
+        ("get_block_status", {}, {"active_block": None}),
+        ("propose_block", {}, same_err),
+        ("get_block_status", {}, {"active_block": None}),
+        ("propose_block", {}, same_err),
+    ]
+    assert _stuck_error(steps, "propose_block") == same_err["error"]
+
+
+def test_stuck_error_helper_ignores_other_tools():
+    """Errors on tool X don't mark tool Y as stuck."""
+    from coach.reasoning import _stuck_error
+    steps = [
+        ("propose_block", {}, {"error": "foo"}),
+        ("propose_block", {}, {"error": "foo"}),
+        ("propose_block", {}, {"error": "foo"}),
+    ]
+    assert _stuck_error(steps, "adjust_lift_load") is None
+
+
 def test_log_session_tool_errors_when_no_prescription_and_no_args(monkeypatch):
     """If neither the lifter nor the engine has numbers to log against,
     bail with a clear error instead of inventing them."""

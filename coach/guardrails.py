@@ -68,6 +68,37 @@ def _weekday_index(label: str) -> int | None:
     return None
 
 
+def _suggest_swap_day(conflict_pair: tuple[int, int],
+                      available_rest_wds: set[int]) -> tuple[int, int] | None:
+    """Given a back-to-back (a, b) weekday pair for one lift, suggest
+    which of the two to move and which available rest weekday to move it
+    to so the resulting spacing is ≥48h. Returns (from_wd, to_wd) — the
+    weekday to move FROM and the weekday to move TO — or None if no
+    rest weekday in the plan offers a valid landing slot.
+
+    Picks the swap with the SMALLEST circular distance from the original
+    conflict day, so the suggestion stays close to what the LLM intended
+    (minimal schedule disruption)."""
+    a, b = conflict_pair
+    best: tuple[int, int, int] | None = None  # (d_move, from_wd, to_wd)
+    for keep, move in ((a, b), (b, a)):
+        for candidate in available_rest_wds:
+            if candidate == keep:
+                continue
+            # Circular distance to the kept day — need ≥2 for proper 48h+ gap.
+            raw = abs(candidate - keep)
+            d_keep = min(raw, 7 - raw)
+            if d_keep < 2:
+                continue
+            # Circular distance from the original day we're moving FROM
+            # (we want the LLM's plan to change as little as possible).
+            raw2 = abs(candidate - move)
+            d_move = min(raw2, 7 - raw2)
+            if best is None or d_move < best[0]:
+                best = (d_move, move, candidate)
+    return (best[1], best[2]) if best else None
+
+
 def _is_rest_day(day: dict) -> bool:
     """A day is a rest day if its label names rest/recovery AND it has no
     exercises. A day labelled 'Active recovery — light walk + foam roll'
@@ -161,7 +192,21 @@ def validate_weekly_plan(plan: dict,
             seen_weekday[wd] = d.get("label", "?")
 
     for i, day in enumerate(days):
-        exercises = day.get("exercises") if isinstance(day, dict) else None
+        if not isinstance(day, dict):
+            # The LLM occasionally produces a malformed days[] where some
+            # entries are bare strings or keys/values got flattened (likely
+            # a JSON-encoding glitch under output-token pressure). Without
+            # this check, day.get(...) later crashes the validator with an
+            # uncaught AttributeError; with it, the LLM gets a clear error
+            # and re-emits the plan.
+            errors.append(f"Day {i+1} is not a structured day-object "
+                          f"({type(day).__name__}: {str(day)[:60]!r}). Each "
+                          f"entry in `days` must be {{label: ..., exercises: "
+                          f"[...]}}. If your output got cut off mid-JSON, "
+                          f"shorten the rationales (5-10 words each) and "
+                          f"re-emit the full plan.")
+            continue
+        exercises = day.get("exercises")
         if not isinstance(exercises, list):
             errors.append(f"Day {i+1} '{day.get('label', '?')}' has malformed "
                           f"'exercises' field — must be a list.")
@@ -396,6 +441,22 @@ def validate_weekly_plan(plan: dict,
     # recovery; space heavy work 48-72h, or stack the lift's second session
     # later in the week). Skipped when day labels don't name weekdays — the
     # engine can't tell the calendar order then.
+    # Available rest weekdays = weekdays NOT used by any training day across
+    # ALL lifts (explicit rest days + unmentioned weekdays). The validator
+    # uses these to suggest a concrete swap target in the error message,
+    # which dramatically cuts the LLM's retry count on this rule (observed:
+    # 5+ propose_block attempts looping on consecutive-day errors with no
+    # actionable hint about WHERE to move the offending day).
+    training_wds: set[int] = set()
+    for d in days:
+        if not isinstance(d, dict):
+            continue
+        wd = _weekday_index(d.get("label", ""))
+        if wd is None or _is_rest_day(d):
+            continue
+        training_wds.add(wd)
+    available_rest_wds = set(range(7)) - training_wds
+
     for lift, wds in lift_weekdays.items():
         if len(wds) < 2 or any(w is None for w in wds):
             continue
@@ -407,12 +468,20 @@ def validate_weekly_plan(plan: dict,
             pair = (6, 0)
         if pair:
             a, b = pair
+            suggestion = _suggest_swap_day(pair, available_rest_wds)
+            extra = ""
+            if suggestion:
+                from_wd, to_wd = suggestion
+                extra = (f" Concrete fix: move {_WEEKDAYS[from_wd].capitalize()}'s "
+                         f"{lift} to {_WEEKDAYS[to_wd].capitalize()} (free "
+                         f"slot in your current plan, ≥48h from the other "
+                         f"{lift} day).")
             errors.append(f"{lift} is scheduled on consecutive days "
                     f"({_WEEKDAYS[a].capitalize()} + "
                     f"{_WEEKDAYS[b].capitalize()}) — a heavy compound "
                     f"needs 48-72h between sessions. Move one {lift} day "
                     f"so its two sessions aren't back-to-back (mind the "
-                    f"Sunday→Monday wrap — the week repeats).")
+                    f"Sunday→Monday wrap — the week repeats).{extra}")
 
     # Rule 9: a strength/volume block must not collapse into a SINGLE-lift
     # program. Addressing a weakness ADDS focused work (an extra secondary /

@@ -34,6 +34,33 @@ from .landmarks import volume_status
 MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
 
+# How many identical errors from the SAME tool in a row before we declare
+# the LLM stuck and bail. 3 matches the system prompt's stated "retry up
+# to 2 more times" rule (initial call + 2 retries = 3 attempts).
+STUCK_THRESHOLD = 3
+
+
+def _stuck_error(steps: list[tuple], tool_name: str) -> str | None:
+    """Return the repeated error message if the LAST STUCK_THRESHOLD calls
+    to `tool_name` in `steps` all returned the same error string. Used to
+    short-circuit the ReAct loop when the LLM is looping on a validator
+    error it isn't learning from — the alternative is burning the whole
+    max_steps budget on identical retries (observed: propose_block looping
+    25+ times before max_steps timeout). Pure function so it's testable
+    without mocking the OpenAI client."""
+    if len(steps) < STUCK_THRESHOLD:
+        return None
+    same_tool = [s for s in steps if s[0] == tool_name]
+    if len(same_tool) < STUCK_THRESHOLD:
+        return None
+    window = same_tool[-STUCK_THRESHOLD:]
+    errors = [s[2].get("error") if isinstance(s[2], dict) else None
+              for s in window]
+    if errors[0] and all(e == errors[0] for e in errors):
+        return errors[0]
+    return None
+
+
 def _tools_to_openai(schemas: list) -> list:
     """Convert the internal tool schemas into OpenAI's function-tool format."""
     out = []
@@ -118,6 +145,26 @@ class _OpenAIClient:
                             f"{'✗ error' if has_err else '✓'}")
                 msgs.append({"role": "tool", "tool_call_id": tc.id,
                              "content": json.dumps(result)})
+                # Stuck-loop guard: if the LLM has now produced
+                # STUCK_THRESHOLD identical errors from this tool in a row,
+                # bail with an actionable message instead of letting it
+                # burn the remaining max_steps. The system prompt already
+                # says "retry up to 2 more times on validator errors"; this
+                # is the engine enforcing the same.
+                stuck = _stuck_error(steps, tc.function.name)
+                if stuck:
+                    if on_step:
+                        on_step(f"   ↳ stopping — {tc.function.name} "
+                                f"failed {STUCK_THRESHOLD}x with the same "
+                                f"error")
+                    return {"text": (
+                        f"(I tried {tc.function.name} {STUCK_THRESHOLD} "
+                        f"times in a row and hit the same error each time, "
+                        f"so I stopped before burning more budget on it. "
+                        f"The error was: {stuck[:400]}\n\nTry rephrasing "
+                        f"your request — maybe ask for a simpler block, or "
+                        f"break it into two messages.)"),
+                        "steps": steps}
         return {"text": "(ReAct loop hit max steps)", "steps": steps}
 
 
