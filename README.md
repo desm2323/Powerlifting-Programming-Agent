@@ -64,12 +64,19 @@ picks a weight.**
 | Knowledge | `coach/blocks.py`, `coach/landmarks.py`, `coach/accessories.py`, `coach/expert_knowledge.py` | knowledge base (block types, volume landmarks, accessory catalog, tri-source coaching KB) |
 | Tools | `coach/loading.py` | tool use / code execution (Program-of-Thoughts) |
 | Guardrails | `coach/guardrails.py` | policy adherence / safety |
+| Policy | `coach/policy.py` | progression policy (rule baseline + contextual ε-greedy bandit) |
 | Loop | `coach/loop.py` | PAGE perceive → reason → act cycle |
 | Interface | `coach/chat.py`, `coach/chat_web.py`, `main.py` | CLI + REPL + Streamlit UI |
 
 Fatigue management is treated as state: `state = (strength, readiness)`,
-`action = progress | hold | deload`. The v1 policy in `coach/readiness.py` is
-hand-written rules; see the roadmap for the learned-policy upgrade.
+`action = progress | hold | deload`. Two policies sit behind the same
+interface in `coach/policy.py`: a deterministic rule policy (default) and
+a contextual ε-greedy bandit that buckets (readiness × RPE-gap × overreach
+streak) and learns from a delayed reward computed on the next logged
+session. Enable the bandit with `COACH_POLICY=bandit`; a `safety_override`
+layer sits above either policy to force `hold` on pain flags and `deload`
+below the readiness floor, so the bandit can only explore inside the
+space those constraints leave open.
 
 ## Setup
 
@@ -202,9 +209,11 @@ runtime.
 
 ## Roadmap (where this goes next)
 
-- **Learned policy** — replace the rule-based `decide_progression()` with a
-  contextual bandit, then a full RL policy, to tune progression to the
-  individual lifter (the headline expansion; nothing else needs to change).
+- **Full RL policy beyond the bandit** — the current bandit treats each
+  decision as independent. Move to a TD/SARSA or PPO policy over multi-week
+  state (running readiness, block-stack position, recent overreach streak)
+  so the agent can credit a decision back across an entire training week,
+  not just the next session.
 - **Velocity input** — accept bar-speed data as a second readiness signal.
 - **Wearable / tracker integration** — auto-import sets from a strength-tracker
   app instead of typed `log` commands.
