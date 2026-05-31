@@ -4,7 +4,15 @@ oracle answers — which is the cheap, reliable kind of eval to build first."""
 import os
 import tempfile
 
-from datetime import date
+from datetime import date, timedelta
+
+
+def _meet_in_weeks(weeks: int) -> str:
+    """ISO date `weeks` calendar weeks from today — used by tests that
+    need a competition_date matching their block list's total cal weeks
+    so commit_season_plan's strict backfill rule (last block's deload
+    must land on the meet, no >21d front gap) accepts them."""
+    return (date.today() + timedelta(weeks=weeks)).isoformat()
 
 from coach import (accessories, blocks, expert_knowledge, guardrails, loading,
                    memory, readiness, reasoning)
@@ -2389,10 +2397,11 @@ def test_chat_season_check_quiet_when_plan_already_exists(tmp_path):
     from coach.chat import Chat
     p = str(tmp_path / "state.json")
     chat = Chat(p)
-    # Pre-populate a season_plan.
+    # Pre-populate a season_plan with a meet that exact-fits the single
+    # peaking block (5 cal wk = duration_weeks 4 + 1 deload).
     chat.agent.commit_season_plan(
-        "2026-10-15", None,
-        blocks=[{"block_type": "strength", "duration_weeks": 4,
+        _meet_in_weeks(5), None,
+        blocks=[{"block_type": "peaking", "duration_weeks": 4,
                  "rationale": "x"}],
     )
     fake_out = {
@@ -2765,7 +2774,7 @@ def test_commit_pops_season_plan_when_type_matches():
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path)
         agent.commit_season_plan(
-            "2026-10-15", None,
+            None, None,  # timing incidental — testing pop-on-commit logic
             blocks=[
                 {"block_type": "volume", "duration_weeks": 4, "rationale": "v1"},
                 {"block_type": "strength", "duration_weeks": 4, "rationale": "s1"},
@@ -2800,7 +2809,7 @@ def test_commit_refused_when_type_mismatches_season_plan():
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path)
         agent.commit_season_plan(
-            "2026-10-15", None,
+            None, None,  # timing incidental — testing type-mismatch reject
             blocks=[
                 {"block_type": "volume", "duration_weeks": 4, "rationale": "v2"},
                 {"block_type": "strength", "duration_weeks": 4, "rationale": "s1"},
@@ -2834,7 +2843,7 @@ def test_commit_override_season_plan_flag_allows_deviation():
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path)
         agent.commit_season_plan(
-            "2026-10-15", None,
+            None, None,  # timing incidental — testing override_season_plan flag
             blocks=[
                 {"block_type": "volume", "duration_weeks": 4, "rationale": "v"},
             ],
@@ -2919,26 +2928,31 @@ def test_commit_season_plan_preserves_competition_date_when_omitted():
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path)
-        # First call sets the meet date.
+        # Pick a meet that exact-fits a 2-block (2 * 5 cal wk = 10 wk) plan
+        # so both calls below pass the strict timing-anchor check.
+        meet = _meet_in_weeks(10)
         agent.commit_season_plan(
-            "2026-10-12", {"squat": 180, "bench": 130, "deadlift": 210},
-            blocks=[{"block_type": "volume", "duration_weeks": 4,
-                     "rationale": "v"}],
+            meet, {"squat": 180, "bench": 130, "deadlift": 210},
+            blocks=[
+                {"block_type": "volume", "duration_weeks": 4, "rationale": "v"},
+                {"block_type": "peaking", "duration_weeks": 4, "rationale": "p"},
+            ],
         )
         # Second call omits date + lifts (LLM forgot, or just revising blocks).
         agent.commit_season_plan(
             None, None,
             blocks=[
-                {"block_type": "volume", "duration_weeks": 4, "rationale": "v"},
                 {"block_type": "strength", "duration_weeks": 4, "rationale": "s"},
+                {"block_type": "peaking",  "duration_weeks": 4, "rationale": "p"},
             ],
         )
         sp = agent.state["season_plan"]
         # Date + lifts preserved.
-        assert sp["competition_date"] == "2026-10-12"
+        assert sp["competition_date"] == meet
         assert sp["competition_lifts"]["deadlift"] == 210
         # Blocks updated.
         assert len(sp["blocks"]) == 2
+        assert sp["blocks"][0]["block_type"] == "strength"
 
 
 def test_commit_season_plan_updates_competition_date_when_supplied():
@@ -2947,18 +2961,20 @@ def test_commit_season_plan_updates_competition_date_when_supplied():
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path)
+        meet1 = _meet_in_weeks(5)  # exact-fit for 1 block of 5 cal wk
         agent.commit_season_plan(
-            "2026-10-12", None,
-            blocks=[{"block_type": "volume", "duration_weeks": 4,
-                     "rationale": "v"}],
+            meet1, None,
+            blocks=[{"block_type": "peaking", "duration_weeks": 4,
+                     "rationale": "p"}],
         )
-        # Lifter explicitly moved the meet.
+        # Lifter explicitly moved the meet — give them more time.
+        meet2 = _meet_in_weeks(5)
         agent.commit_season_plan(
-            "2026-11-01", None,
-            blocks=[{"block_type": "volume", "duration_weeks": 4,
-                     "rationale": "v"}],
+            meet2, None,
+            blocks=[{"block_type": "peaking", "duration_weeks": 4,
+                     "rationale": "p"}],
         )
-        assert agent.state["season_plan"]["competition_date"] == "2026-11-01"
+        assert agent.state["season_plan"]["competition_date"] == meet2
 
 
 def test_season_plan_outline_persists():
@@ -2968,7 +2984,7 @@ def test_season_plan_outline_persists():
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path)
         agent.commit_season_plan(
-            "2026-10-15", None,
+            None, None,  # timing incidental — testing outline persistence
             blocks=[
                 {"block_type": "volume", "duration_weeks": 4,
                  "rationale": "rebuild",
@@ -3005,15 +3021,18 @@ def test_update_season_plan_partial():
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path)
+        meet1 = _meet_in_weeks(5)  # exact-fit for the 1 peaking block below
         agent.commit_season_plan(
-            "2026-10-15", {"squat": 180},
-            blocks=[{"block_type": "volume", "duration_weeks": 4,
+            meet1, {"squat": 180},
+            blocks=[{"block_type": "peaking", "duration_weeks": 4,
                      "rationale": "x"}],
         )
-        # Update only competition_date.
-        agent.update_season_plan(competition_date="2026-11-01")
+        # Update only competition_date — blocks list unchanged so backfill
+        # still anchors correctly.
+        meet2 = _meet_in_weeks(5)
+        agent.update_season_plan(competition_date=meet2)
         sp = agent.state["season_plan"]
-        assert sp["competition_date"] == "2026-11-01"
+        assert sp["competition_date"] == meet2
         assert sp["competition_lifts"] == {"squat": 180}  # untouched
         assert len(sp["blocks"]) == 1  # untouched
 
@@ -3023,35 +3042,44 @@ def test_dispatch_get_season_plan_tool():
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path, with_block=True)
+        # with_block=True commits a 4-wk volume block today (snapped to
+        # next Monday). Active deload ends ~5 wk after that Monday, so a
+        # 1-block upcoming chain of 5 cal wk needs the meet ~11 wk from
+        # today (1 buffer week absorbs the weekday-snap offset; the
+        # backfill accepts <7d gaps silently).
+        meet = _meet_in_weeks(11)
         agent.commit_season_plan(
-            "2026-10-15", None,
+            meet, None,
             blocks=[
                 {"block_type": "strength", "duration_weeks": 4, "rationale": "after"},
             ],
         )
         out = reasoning.dispatch_tool(agent.state, "get_season_plan", {})
-        assert out["competition_date"] == "2026-10-15"
+        assert out["competition_date"] == meet
         assert out["active_block"] is not None
         assert out["active_block"]["type"] == "volume"
         assert len(out["upcoming_blocks"]) == 1
 
 
 def test_dispatch_propose_season_tool_commits():
-    """The LLM's propose_season tool writes state via the agent."""
+    """The LLM's propose_season tool writes state via the agent.
+    Uses exact-fit (3 blocks of 5 cal wk each = 15 wk) so the strict
+    backfill accepts."""
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "state.json")
         agent = _new_agent(path)
+        meet = _meet_in_weeks(15)
         out = reasoning.dispatch_tool(
             agent.state, "propose_season",
-            {"competition_date": "2026-10-15",
+            {"competition_date": meet,
              "competition_lifts": {"squat": 180, "bench": 130, "deadlift": 210},
              "blocks_plan": [
                  {"block_type": "volume", "duration_weeks": 4,
-                  "rationale": "rebuild", "planned_start": "2026-06-01"},
+                  "rationale": "rebuild"},
                  {"block_type": "strength", "duration_weeks": 4,
-                  "rationale": "express", "planned_start": "2026-07-06"},
-                 {"block_type": "peaking", "duration_weeks": 3,
-                  "rationale": "taper", "planned_start": "2026-08-10"},
+                  "rationale": "express"},
+                 {"block_type": "peaking", "duration_weeks": 4,
+                  "rationale": "taper"},
              ]},
             agent=agent,
         )
@@ -3512,11 +3540,26 @@ def test_compute_macrocycle_sizing_handles_extreme_short():
     assert out["sequence"][0]["block_type"] == "peaking"
 
 
-def test_compute_macrocycle_sizing_returns_planned_weeks():
-    """Each sequence entry carries its planned_weeks (5 wks each)."""
-    out = expert_knowledge.compute_macrocycle_sizing(weeks_to_comp=22)
-    for b in out["sequence"]:
-        assert b["planned_weeks"] == 5
+def test_compute_macrocycle_sizing_block_lengths_sum_to_weeks_to_comp():
+    """Block lengths must add up EXACTLY to weeks_to_comp so the
+    backfill in commit_season_plan lands the peaking deload on the meet
+    date without overshoot or gap. Each block is 3-9 cal weeks; peaking
+    (the last one) stays at the 5-week default. Earlier blocks absorb
+    odd-week remainders."""
+    for wks in (8, 13, 17, 19, 22, 26, 30):
+        out = expert_knowledge.compute_macrocycle_sizing(weeks_to_comp=wks)
+        total = sum(b["planned_weeks"] for b in out["sequence"])
+        assert total == wks, (
+            f"weeks_to_comp={wks}: sequence sums to {total}, "
+            f"expected {wks}. lengths="
+            f"{[b['planned_weeks'] for b in out['sequence']]}")
+        # Every block has a sane length (≥3 cal wk = ≥2 productive + deload).
+        for b in out["sequence"]:
+            assert b["planned_weeks"] >= 3
+        # Peaking block keeps the base 5-week default whenever possible
+        # (only collapsed for very tight windows < 8wk).
+        if wks >= 8:
+            assert out["sequence"][-1]["planned_weeks"] == 5
 
 
 def test_compute_macrocycle_sizing_cites_source():

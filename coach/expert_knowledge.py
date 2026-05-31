@@ -2337,15 +2337,32 @@ def compute_macrocycle_sizing(
             Sebastian xZ2QTewSMuk @ 18:51 (4-5 week messycle default).
     """
     weeks_to_comp = max(4, int(weeks_to_comp))
-    block_length = 5
-    num_blocks = max(1, round(weeks_to_comp / block_length))
+    base = 5  # default calendar length per block (4 productive + 1 deload)
 
-    # Allow ±2-week overshoot: short overshoots are fine (lifter starts a
-    # couple weeks earlier than strictly needed). Only drop a block if
-    # we'd overshoot by MORE than 2 weeks — otherwise we'd undersize
-    # naturally-rounding cases like 13wk → 3 blocks (15wk total, +2).
-    if num_blocks * block_length > weeks_to_comp + 2:
-        num_blocks -= 1
+    # Block lengths SUM TO weeks_to_comp EXACTLY. The commit_season_plan
+    # backfill walks backwards from the meet, so any total ≠ weeks_to_comp
+    # either rejects (too long) or leaves a visible gap (too short).
+    # Fitting exactly = peaking deload ends on the meet AND the lifter
+    # starts immediately, with no dead time. Strategy: peaking gets the
+    # base length; the remaining weeks distribute across developmental
+    # blocks, FIRST blocks absorbing odd-week remainders. If the window
+    # is too tight for any developmental block, fall back to a single
+    # block of the full length (a longer-than-usual peaking block).
+    peak = base
+    remaining = weeks_to_comp - peak
+    if remaining < 3:
+        block_lengths = [weeks_to_comp]
+    else:
+        n_dev = max(1, round(remaining / base))
+        per = remaining // n_dev
+        extra = remaining - per * n_dev
+        if per < 3 and n_dev > 1:  # would produce a too-short dev block
+            n_dev -= 1
+            per = remaining // n_dev
+            extra = remaining - per * n_dev
+        dev_lengths = [per + 1] * extra + [per] * (n_dev - extra)
+        block_lengths = dev_lengths + [peak]
+    num_blocks = len(block_lengths)
 
     # Block-type sequence: always end on peaking. Earlier blocks are
     # developmental (volume / strength). Sequence biased by lifter_status.
@@ -2387,20 +2404,21 @@ def compute_macrocycle_sizing(
     roles = ["deposit"] * (num_blocks - 1) + ["PR"]
     sequence = [
         {"position": i + 1, "block_type": t,
-         "planned_weeks": block_length, "role": r}
+         "planned_weeks": block_lengths[i], "role": r}
         for i, (t, r) in enumerate(zip(types, roles))
     ]
 
+    lengths_str = "+".join(str(n) for n in block_lengths)
     rationale = (
-        f"{weeks_to_comp}wk to comp / {block_length}wk per block = "
-        f"{num_blocks} blocks. Final block is peaking, ending on the "
-        f"meet date. Earlier blocks are deposits per Ben's stacking "
+        f"{weeks_to_comp}wk to comp = {num_blocks} blocks "
+        f"({lengths_str} cal wk). Final block is peaking, deload ends on "
+        f"the meet date. Earlier blocks are deposits per Ben's stacking "
         f"(406rClFwNxY @ 8:45). Sequence biased by lifter_status="
         f"{lifter_status!r}: {' → '.join(t.title() for t in types)}."
     )
     return {
         "weeks_to_comp": weeks_to_comp,
-        "block_length": block_length,
+        "block_length": base,  # default per-block length (some blocks may differ)
         "num_blocks": num_blocks,
         "sequence": sequence,
         "rationale": rationale,

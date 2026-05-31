@@ -121,6 +121,35 @@ def _earliest_start_from_history(state: dict) -> date | None:
     return started + timedelta(weeks=dur + 1)
 
 
+def _expected_block_end(start_iso: str | None, duration_weeks: int | None) -> date | None:
+    """Calendar day the deload week of a block ends on
+    (started_at + duration + 1 deload week, in weeks).
+    None if either field is missing or unparseable."""
+    if not start_iso or not isinstance(duration_weeks, int):
+        return None
+    try:
+        return date.fromisoformat(start_iso) + timedelta(weeks=duration_weeks + 1)
+    except (ValueError, TypeError):
+        return None
+
+
+def _earliest_chain_start(state: dict, today: date) -> date:
+    """When can the next upcoming-blocks chain begin? Whichever is later
+    of (today, end of active block, end of last archived block). Used by
+    the season-plan backfill to validate the LLM didn't pick a macrocycle
+    longer than the calendar window."""
+    earliest = today
+    active = state.get("block", {}) or {}
+    a_end = _expected_block_end(active.get("started_at"),
+                                active.get("duration_weeks"))
+    if a_end:
+        earliest = max(earliest, a_end)
+    h_end = _earliest_start_from_history(state)
+    if h_end:
+        earliest = max(earliest, h_end)
+    return earliest
+
+
 def _trace(tag: str, msg: str) -> None:
     print(f"  [{tag:<8}] {msg}")
 
@@ -286,9 +315,24 @@ class Agent:
                 anchor = date.today()
             start = _compute_start_date(plan, anchor)
         else:
-            start = _compute_start_date(
-                plan, date.today(),
-                earliest=_earliest_start_from_history(self.state))
+            # Also floor on the season_plan's backfilled planned_start
+            # for this slot (commit_season_plan walks backwards from the
+            # meet, so respecting it here is what actually lands the
+            # macrocycle on the competition date — without it, commit_block
+            # would happily start "next Monday" and the meet would slip).
+            season_floor = None
+            if upcoming and upcoming[0].get("block_type") == block_type:
+                ps = upcoming[0].get("planned_start")
+                if ps:
+                    try:
+                        season_floor = date.fromisoformat(ps)
+                    except (ValueError, TypeError):
+                        pass
+            history_floor = _earliest_start_from_history(self.state)
+            floors = [d for d in (history_floor, season_floor) if d]
+            earliest_floor = max(floors) if floors else None
+            start = _compute_start_date(plan, date.today(),
+                                        earliest=earliest_floor)
         # Fill rest days deterministically so the committed plan always shows a
         # full Mon-Sun week. Done after the start date is computed so start
         # timing is unaffected.
@@ -525,13 +569,84 @@ class Agent:
         merged_lifts = (competition_lifts
                         if competition_lifts is not None
                         else existing.get("competition_lifts"))
+
+        # Backfill planned_start per block by walking BACKWARDS from the
+        # meet. The last upcoming block's deload week ends on
+        # competition_date; earlier blocks chain back by (duration + 1)
+        # weeks each. This makes the LLM literally unable to drift block
+        # timing — if it picks too few blocks, the gap shows up at the
+        # front instead of the meet date slipping.
+        timing_note: str | None = None
+        if merged_date and cleaned:
+            try:
+                comp_date = date.fromisoformat(merged_date)
+            except (ValueError, TypeError):
+                comp_date = None
+            if comp_date:
+                cursor = comp_date
+                for entry in reversed(cleaned):
+                    weeks = int(entry["duration_weeks"]) + 1
+                    start = cursor - timedelta(weeks=weeks)
+                    entry["planned_start"] = start.isoformat()
+                    cursor = start
+                earliest = _earliest_chain_start(self.state, date.today())
+                first_start = date.fromisoformat(cleaned[0]["planned_start"])
+                if first_start < earliest:
+                    weeks_over = (earliest - first_start).days // 7 + 1
+                    return {"error": (
+                        f"REFUSED: macrocycle is too long for the time "
+                        f"available. Walking backwards from competition_"
+                        f"date {comp_date.isoformat()}, the first upcoming "
+                        f"block would need to start "
+                        f"{cleaned[0]['planned_start']} — but the earliest "
+                        f"the chain can begin is {earliest.isoformat()} "
+                        f"(after the active block's deload, or today). "
+                        f"You're ~{weeks_over} weeks too long. Re-propose "
+                        f"with fewer blocks OR shorter duration_weeks per "
+                        f"block (call compute_macrocycle_sizing again with "
+                        f"weeks_to_comp = "
+                        f"{(comp_date - earliest).days // 7}).")}
+                gap_days = (first_start - earliest).days
+                # Tiered: >21d = REJECT (too much dead time, LLM must
+                # re-propose with a longer macrocycle); 7-21d = accept
+                # with a timing_note the LLM should mention to the lifter;
+                # <7d = silent (weekday-snap rounding noise).
+                if gap_days >= 21:
+                    return {"error": (
+                        f"REFUSED: macrocycle leaves a {gap_days // 7}-week "
+                        f"gap before the first block (would start "
+                        f"{first_start.isoformat()}, today is "
+                        f"{earliest.isoformat()}). Lifter would sit around "
+                        f"for {gap_days // 7} weeks of no programming, which "
+                        f"is wrong. Call compute_macrocycle_sizing("
+                        f"weeks_to_comp={(comp_date - earliest).days // 7}) "
+                        f"and use ITS sequence verbatim — including the "
+                        f"per-block planned_weeks values (some may not be "
+                        f"5). Pass duration_weeks = planned_weeks - 1 for "
+                        f"each entry. Do NOT round all blocks to 4 "
+                        f"productive weeks — that's what undersized this "
+                        f"macrocycle.")}
+                if gap_days >= 7:
+                    timing_note = (
+                        f"first upcoming block starts "
+                        f"{first_start.isoformat()} — a {gap_days}-day gap "
+                        f"from {earliest.isoformat()}. The macrocycle is "
+                        f"anchored to the meet date but a bit short. "
+                        f"Mention to the lifter that they'll start ~"
+                        f"{gap_days // 7 + 1} week(s) later than today and "
+                        f"can keep doing what they were doing in the "
+                        f"meantime.")
+
         self.state["season_plan"] = {
             "competition_date": merged_date,
             "competition_lifts": merged_lifts,
             "blocks": cleaned,
         }
         self._save()
-        return {"committed_season_plan": self.state["season_plan"]}
+        out = {"committed_season_plan": self.state["season_plan"]}
+        if timing_note:
+            out["timing_note"] = timing_note
+        return out
 
     def update_season_plan(self, competition_date: str | None = None,
                            competition_lifts: dict | None = None,

@@ -498,6 +498,174 @@ def test_log_session_tool_defaults_weight_and_reps_from_pending_prescription(mon
         assert len(a.state["policy_state"].get("cells", [])) > 0
 
 
+# --- season-plan backfill: meet date must always land correctly --------
+# These guard the recent fix where the LLM's blocks_plan was free to
+# drift from the meet date silently. commit_season_plan now backfills
+# planned_start by walking backwards from competition_date so the last
+# block's deload ends ON the meet, and commit_block respects that floor.
+
+def test_season_plan_backfills_planned_starts_from_meet_date():
+    """The LAST upcoming block's deload week must end on
+    competition_date; earlier blocks chain back exactly."""
+    from datetime import date, timedelta
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = Agent(path)
+        a.init_program("T", {"squat": 150, "bench": 100, "deadlift": 190},
+                       bodyweight_kg=85, experience="intermediate")
+        # 4 blocks * 5 cal wk = exact 20-week fit, picking the meet so
+        # the strict backfill accepts the chain without a front gap.
+        meet = (date.today() + timedelta(weeks=20)).isoformat()
+        out = a.commit_season_plan(
+            competition_date=meet, competition_lifts=None,
+            blocks=[
+                {"block_type": "volume",   "duration_weeks": 4, "rationale": "x"},
+                {"block_type": "strength", "duration_weeks": 4, "rationale": "x"},
+                {"block_type": "strength", "duration_weeks": 4, "rationale": "x"},
+                {"block_type": "peaking",  "duration_weeks": 4, "rationale": "x"},
+            ],
+        )
+        assert "error" not in out, out
+        blocks = out["committed_season_plan"]["blocks"]
+        last = blocks[-1]
+        last_start = date.fromisoformat(last["planned_start"])
+        # Deload week ends `duration_weeks + 1` weeks after start.
+        last_end = last_start + timedelta(weeks=last["duration_weeks"] + 1)
+        assert last_end == date.fromisoformat(meet), (
+            f"last block ends {last_end}, meet is {meet}")
+
+
+def test_season_plan_rejects_macrocycle_too_long_for_window():
+    """If the proposed macrocycle would need to start before today (or
+    before the active block's expected end), commit_season_plan errors
+    with an actionable message naming the correct weeks_to_comp."""
+    from datetime import date, timedelta
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = Agent(path)
+        a.init_program("T", {"squat": 150, "bench": 100, "deadlift": 190},
+                       bodyweight_kg=85, experience="intermediate")
+        meet = (date.today() + timedelta(weeks=10)).isoformat()
+        # 4 blocks of 5 cal wk = 20 wk back from a 10-wk-away meet -> overshoots
+        out = a.commit_season_plan(
+            competition_date=meet, competition_lifts=None,
+            blocks=[{"block_type": "volume", "duration_weeks": 4,
+                     "rationale": "x"}] * 3
+                   + [{"block_type": "peaking", "duration_weeks": 4,
+                       "rationale": "x"}],
+        )
+        assert "error" in out
+        msg = out["error"].lower()
+        assert "too long" in msg
+        assert "compute_macrocycle_sizing" in msg
+
+
+def test_season_plan_rejects_large_front_gap():
+    """When the LLM under-sizes the macrocycle by 3+ weeks (e.g. picks
+    3 standard blocks for a 19-week window when compute_macrocycle_sizing
+    returns 4 variable-length blocks fitting exactly), the engine REJECTS
+    so the LLM must retry with the correct sequence — not silently
+    accept a 4-week dead zone before the lifter starts training."""
+    from datetime import date, timedelta
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = Agent(path)
+        a.init_program("T", {"squat": 150, "bench": 100, "deadlift": 190},
+                       bodyweight_kg=85, experience="intermediate")
+        meet = (date.today() + timedelta(weeks=20)).isoformat()
+        # 2 blocks of 5 cal wk = 10 wk total — 10-week gap, way over the
+        # 21-day reject threshold.
+        out = a.commit_season_plan(
+            competition_date=meet, competition_lifts=None,
+            blocks=[
+                {"block_type": "strength", "duration_weeks": 4, "rationale": "x"},
+                {"block_type": "peaking",  "duration_weeks": 4, "rationale": "x"},
+            ],
+        )
+        assert "error" in out
+        msg = out["error"].lower()
+        assert "gap" in msg
+        assert "compute_macrocycle_sizing" in msg
+
+
+def test_season_plan_accepts_mild_gap_with_timing_note():
+    """A 1-2 week gap (acceptable weekday slop or unavoidable rounding)
+    is accepted, with a timing_note the LLM should mention to the lifter
+    ('you'll start a week from now')."""
+    from datetime import date, timedelta
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = Agent(path)
+        a.init_program("T", {"squat": 150, "bench": 100, "deadlift": 190},
+                       bodyweight_kg=85, experience="intermediate")
+        # Pick a meet 17 wk + 9 days out so a 17-cal-wk macrocycle leaves a
+        # ~9-day front gap (in the 7-20 day notice band).
+        meet = (date.today() + timedelta(weeks=17, days=9)).isoformat()
+        out = a.commit_season_plan(
+            competition_date=meet, competition_lifts=None,
+            blocks=[  # 4+4+4+4 productive = 5+5+5+5 cal = 20wk -> too long
+                {"block_type": "volume",   "duration_weeks": 3, "rationale": "x"},
+                {"block_type": "strength", "duration_weeks": 3, "rationale": "x"},
+                {"block_type": "strength", "duration_weeks": 3, "rationale": "x"},
+                {"block_type": "peaking",  "duration_weeks": 3, "rationale": "x"},
+            ],  # 4+4+4+4 = 16 cal wk vs 17wk+9d window -> gap ~16 days
+        )
+        # Either accepted with note (gap 7-20 days) — exact gap depends
+        # on weekday math, so accept either branch but require SOMETHING
+        # surfaces if gap is non-trivial.
+        if "error" in out:
+            # If today's weekday math pushed it into REJECT territory,
+            # that's also acceptable — both responses are "engine caught it".
+            assert "gap" in out["error"].lower()
+        else:
+            assert "timing_note" in out
+            assert "gap" in out["timing_note"].lower()
+
+
+def test_commit_block_honors_season_plan_planned_start():
+    """When commit_block runs the FIRST upcoming block of a season_plan
+    whose backfilled planned_start is in the future, the actual block
+    must start on that planned_start — not 'next Monday from today' —
+    so the meet date stays anchored even after blocks are committed.
+
+    Trick to force a future planned_start without tripping the strict
+    >21d reject: have an ACTIVE block whose expected end is far enough
+    out that the chained `earliest` (active_end) ≈ first upcoming
+    planned_start. Here we commit a season ahead of an existing block."""
+    from datetime import date, timedelta
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "state.json")
+        a = Agent(path)
+        a.init_program("T", {"squat": 150, "bench": 100, "deadlift": 190},
+                       bodyweight_kg=85, experience="intermediate")
+        # Active block consumes ~5 cal wk; 1 upcoming peaking block fills
+        # the last 5 cal wk. Pick a meet ~11 wk out so the weekday-snap
+        # offset on the active block's start doesn't push the chain out
+        # of the strict-anchor window.
+        a.commit_block("volume", 4, "active", ["squat"])
+        meet = (date.today() + timedelta(weeks=11)).isoformat()
+        a.commit_season_plan(
+            competition_date=meet, competition_lifts=None,
+            blocks=[{"block_type": "peaking", "duration_weeks": 4,
+                     "rationale": "x"}],
+        )
+        season_peaking_start = date.fromisoformat(
+            a.state["season_plan"]["blocks"][0]["planned_start"])
+        # Archive the active volume block (mark as deload-then-complete)
+        # so we can commit the peaking block next.
+        a.state["block"]["in_deload"] = True
+        a.archive_current_block("done")
+        # Commit the upcoming peaking block. started_at should snap to/
+        # after season_peaking_start, not 'next Monday' (which would
+        # often be earlier and re-introduce meet-date drift).
+        res = a.commit_block("peaking", 4, "first", ["squat"],
+                            weekly_plan=None)
+        assert "error" not in res, res
+        actual_start = date.fromisoformat(res["started_at"])
+        assert actual_start >= season_peaking_start, (
+            f"block started {actual_start}, expected >= {season_peaking_start}")
+
+
 def test_log_session_tool_errors_when_no_prescription_and_no_args(monkeypatch):
     """If neither the lifter nor the engine has numbers to log against,
     bail with a clear error instead of inventing them."""
