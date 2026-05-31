@@ -8,8 +8,7 @@ messy free text like *"grinded the last rep, felt heavy out of the hole"*),
 tracks accumulated fatigue, and adjusts — progress, hold, or deload — within
 hard safety limits.
 
-> **2-minute demo video:** [\
-https://screenapp.io/app/v/rjvO2KEXRU 
+> **2-minute demo video:** [Watch on ScreenApp](https://screenapp.io/app/v/rjvO2KEXRU)
 
 ---
 
